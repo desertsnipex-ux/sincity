@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SinCity Supporter Store</title>
+  <link rel="icon" href="assets/emblem-hero.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="store">
+  <div class="page-shell">
+    <div class="ambient-backdrop"></div>
+    <div class="ambient-grid"></div>
+    <canvas id="particle-field"></canvas>
+    <div class="scanlines"></div>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html#home" aria-label="SinCity home">
+          <div class="brand-mark">
+            <img src="assets/emblem-hero.png" alt="SinCity emblem">
+          </div>
+          <div class="brand-copy">
+            <div class="brand-name" id="brand-name">SinCity</div>
+            <div class="brand-tag" id="brand-tag">By Enact</div>
+          </div>
+        </a>
+        <nav class="nav-links" id="nav-links" aria-label="Primary"></nav>
+        <div class="header-actions">
+          <button class="ghost-button icon-button" id="theme-toggle" type="button" title="Toggle theme">
+            <span id="theme-icon">N</span>
+          </button>
+          <div class="status-pill">
+            <span class="pulse-dot"></span>
+            <span><strong id="header-online">0</strong> online now</span>
+          </div>
+          <a class="primary-button" href="apply.html#apply">Apply now</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="subpage-main">
+      <section class="section section-band subpage-intro">
+        <div class="section-frame">
+          <div class="section-heading reveal">
+            <div>
+              <div class="section-kicker">Supporter Store</div>
+              <h1 class="section-title">Perks with enough drama to feel fun</h1>
+            </div>
+            <p class="section-description">
+              The store page is isolated now, so the pricing grid and calculator can breathe instead of living at the bottom of a giant landing page.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-band" id="store">
+        <div class="section-frame">
+          <div class="store-layout">
+            <div class="tier-grid" id="tier-grid"></div>
+
+            <aside class="purchase-card reveal">
+              <div class="panel-title">Supporter calculator <small>tune the bundle</small></div>
+              <div class="summary-card">
+                <div class="summary-line"><span>Selected tier</span><strong id="summary-tier">Bronze</strong></div>
+                <div class="summary-line"><span>Queue boost</span><strong id="summary-queue">Level 1</strong></div>
+                <div class="summary-line"><span>Import tokens</span><strong id="summary-imports">0</strong></div>
+                <div class="summary-line"><span>Cart total</span><strong id="summary-total">500 CC</strong></div>
+              </div>
+              <div class="range-stack">
+                <label class="field-label" for="extra-cc">Extra city credits</label>
+                <input class="range-input" id="extra-cc" type="range" min="0" max="1500" step="100" value="0">
+                <div class="summary-line"><span>Top-up amount</span><strong id="extra-cc-value">0 CC</strong></div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-line"><span>Perk tone</span><strong id="summary-tone">Clean and useful</strong></div>
+                <div class="summary-line"><span>Recommended for</span><strong id="summary-audience">New regulars</strong></div>
+                <div class="summary-line"><span>Queue skip chance</span><strong id="summary-skip">Fair</strong></div>
+              </div>
+              <button class="primary-button" type="button" id="checkout-button">Lock in supporter pack</button>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div>SinCity by Enact. Dynamic local build with API-backed content, live stats, and application storage.</div>
+        <div><a href="admin.html">Admin dashboard</a></div>
+      </div>
+    </footer>
+
+    <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

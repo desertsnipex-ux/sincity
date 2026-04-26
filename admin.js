@@ -310,7 +310,7 @@ function attachLocalSync() {
 
 async function bootstrapAdmin() {
   adminRefs.key.value = getAdminKey();
-  const preferLocalMode = window.location.protocol === "file:" || window.location.pathname.endsWith(".html");
+  const preferLocalMode = window.location.protocol === "file:";
   if (preferLocalMode) {
     adminState.mode = "local";
     attachLocalSync();

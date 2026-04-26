@@ -7,6 +7,15 @@ const LOCAL_KEYS = {
 };
 
 const LOCAL_CHANNEL_NAME = "sincity-local-channel";
+const PAGE_ROUTES = {
+  home: "index.html#home",
+  pulse: "pulse.html#pulse",
+  districts: "world.html#districts",
+  gallery: "world.html#gallery",
+  apply: "apply.html#apply",
+  store: "store.html#store",
+  faq: "index.html#faq"
+};
 
 const state = {
   mode: "loading",
@@ -20,6 +29,7 @@ const state = {
   currentStep: 0,
   galleryIndex: 0,
   localChannel: "BroadcastChannel" in window ? new BroadcastChannel(LOCAL_CHANNEL_NAME) : null,
+  page: document.body.dataset.page || "home",
   formState: {
     discord: "",
     displayName: "",
@@ -76,6 +86,8 @@ const refs = {
   nextStep: document.getElementById("next-step"),
   clearDraft: document.getElementById("clear-draft"),
   pendingCount: document.getElementById("pending-count"),
+  radioScanner: document.getElementById("radio-scanner"),
+  radioStatus: document.getElementById("radio-status"),
   previewName: document.getElementById("preview-name"),
   previewAge: document.getElementById("preview-age"),
   previewConcept: document.getElementById("preview-concept"),
@@ -107,6 +119,9 @@ const refs = {
 };
 
 function showToast(title, message) {
+  if (!refs.toastStack) {
+    return;
+  }
   const toast = document.createElement("div");
   toast.className = "toast";
   toast.innerHTML = `<strong>${title}</strong><span>${message}</span>`;
@@ -132,6 +147,25 @@ function writeLocalJson(key, value) {
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function getSectionHref(sectionId) {
+  return PAGE_ROUTES[sectionId] || `index.html#${sectionId}`;
+}
+
+function navigateToTarget(target) {
+  if (!target) {
+    return;
+  }
+  const normalized = target.startsWith("#") ? target.slice(1) : target;
+  const href = getSectionHref(normalized);
+  const [pageName, hash] = href.split("#");
+  const samePage = pageName === window.location.pathname.split("/").pop();
+  if (samePage && hash) {
+    document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  window.location.href = href;
 }
 
 async function fetchJson(url, options) {
@@ -215,70 +249,129 @@ function attachLocalSync() {
   }
 }
 
+function updateRadioScanner() {
+  if (!refs.radioScanner) return;
+  
+  const codes = [
+    "10-4 Copy that, units responding.",
+    "Code 3 pursuit in progress - Southside.",
+    "ADAM-1 checking in at Mission Row.",
+    "10-20? Suspect last seen heading East.",
+    "BOLO issued for a black Comet S2.",
+    "Shots fired, requesting backup immediately.",
+    "10-8 On patrol, clear for calls.",
+    "Traffic stop on Great Ocean Highway.",
+    "Suspect in custody, heading to MRPD.",
+    "Awaiting EMS at scene, over."
+  ];
+  
+  const statusOptions = ["LIVE TRAFFIC", "ENCRYPTED", "SCANNING", "SIGNAL WEAK"];
+  
+  refs.radioScanner.textContent = codes[Math.floor(Math.random() * codes.length)];
+  if (refs.radioStatus) {
+    refs.radioStatus.textContent = statusOptions[Math.floor(Math.random() * statusOptions.length)];
+  }
+}
+
 function formatRuntime() {
   const runtime = state.runtime;
-  refs.headerOnline.textContent = runtime.online;
-  refs.onlineCount.textContent = `${runtime.online}/${runtime.maxPlayers}`;
-  refs.queueCount.textContent = String(runtime.queue);
-  refs.heatLevel.textContent = runtime.heatLevel;
-  refs.economyShift.textContent = `${runtime.economyShift >= 0 ? "+" : ""}${Number(runtime.economyShift).toFixed(1)}%`;
-  refs.weatherLabel.textContent = runtime.weatherLabel;
-  refs.dispatchMood.textContent = runtime.dispatchMood;
-  refs.pendingCount.textContent = String(runtime.pendingApplications || 0);
+  if (!runtime) {
+    return;
+  }
+  updateRadioScanner();
+  if (refs.headerOnline) refs.headerOnline.textContent = runtime.online;
+  if (refs.onlineCount) refs.onlineCount.textContent = `${runtime.online}/${runtime.maxPlayers}`;
+  if (refs.queueCount) refs.queueCount.textContent = String(runtime.queue);
+  if (refs.heatLevel) refs.heatLevel.textContent = runtime.heatLevel;
+  if (refs.economyShift) refs.economyShift.textContent = `${runtime.economyShift >= 0 ? "+" : ""}${Number(runtime.economyShift).toFixed(1)}%`;
+  if (refs.weatherLabel) refs.weatherLabel.textContent = runtime.weatherLabel;
+  if (refs.dispatchMood) refs.dispatchMood.textContent = runtime.dispatchMood;
+  if (refs.pendingCount) refs.pendingCount.textContent = String(runtime.pendingApplications || 0);
 }
 
 function updateClocks() {
   if (!state.runtime) {
     return;
   }
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: state.runtime.serverTimeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false
-  });
-  refs.serverClock.textContent = formatter.format(new Date());
+  if (refs.serverClock) {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: state.runtime.serverTimeZone,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    });
+    refs.serverClock.textContent = formatter.format(new Date());
+  }
 
-  const diff = Math.max(0, new Date(state.runtime.restartAt).getTime() - Date.now());
-  const hours = String(Math.floor(diff / 3600000)).padStart(2, "0");
-  const minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0");
-  const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
-  refs.restartCountdown.textContent = `${hours}:${minutes}:${seconds}`;
+  if (refs.restartCountdown) {
+    const diff = Math.max(0, new Date(state.runtime.restartAt).getTime() - Date.now());
+    const hours = String(Math.floor(diff / 3600000)).padStart(2, "0");
+    const minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0");
+    const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
+    refs.restartCountdown.textContent = `${hours}:${minutes}:${seconds}`;
+  }
 }
 
 function renderNav() {
+  if (!refs.navLinks) {
+    return;
+  }
   refs.navLinks.innerHTML = "";
+  const pageForSection = {
+    home: "home",
+    pulse: "pulse",
+    districts: "world",
+    gallery: "world",
+    apply: "apply",
+    store: "store",
+    faq: "home"
+  };
+
+  const homeLink = document.createElement("a");
+  homeLink.className = `nav-link${state.page === "home" ? " active" : ""}`;
+  homeLink.href = getSectionHref("home");
+  homeLink.textContent = "Home";
+  refs.navLinks.appendChild(homeLink);
+
   state.content.navigation.forEach((item) => {
     const link = document.createElement("a");
-    link.className = "nav-link";
-    link.href = `#${item.id}`;
+    link.className = `nav-link${pageForSection[item.id] === state.page ? " active" : ""}`;
+    link.href = getSectionHref(item.id);
     link.textContent = item.label;
     refs.navLinks.appendChild(link);
   });
 }
 
 function renderHero() {
+  if (!refs.heroTitleMain) {
+    return;
+  }
   const { site, metrics } = state.content;
-  refs.brandName.textContent = site.name;
-  refs.brandTag.textContent = site.tag;
-  refs.heroEyebrow.textContent = site.eyebrow + (state.mode === "local" ? " Local preview mode." : "");
+  if (refs.brandName) refs.brandName.textContent = site.name;
+  if (refs.brandTag) refs.brandTag.textContent = site.tag;
+  if (refs.heroEyebrow) refs.heroEyebrow.textContent = site.eyebrow + (state.mode === "local" ? " Local preview mode." : "");
   refs.heroTitleMain.textContent = site.heroTitle;
-  refs.heroTitleAccent.textContent = site.heroAccent;
-  refs.heroDescription.textContent = site.heroDescription;
-  refs.sceneCopy.textContent = site.quickPitch;
+  if (refs.heroTitleAccent) refs.heroTitleAccent.textContent = site.heroAccent;
+  if (refs.heroDescription) refs.heroDescription.textContent = site.heroDescription;
+  if (refs.sceneCopy) refs.sceneCopy.textContent = site.quickPitch;
 
-  refs.heroMetrics.innerHTML = "";
-  metrics.forEach((metric) => {
-    const article = document.createElement("article");
-    article.className = "metric";
-    const value = metric.key ? `${state.runtime[metric.key]}${metric.suffix || ""}` : metric.value;
-    article.innerHTML = `<div class="metric-label">${metric.label}</div><div class="metric-value">${value}</div><div class="metric-note">${metric.note}</div>`;
-    refs.heroMetrics.appendChild(article);
-  });
+  if (refs.heroMetrics) {
+    refs.heroMetrics.innerHTML = "";
+    metrics.forEach((metric) => {
+      const article = document.createElement("article");
+      article.className = "metric";
+      const value = metric.key ? `${state.runtime[metric.key]}${metric.suffix || ""}` : metric.value;
+      article.innerHTML = `<div class="metric-label">${metric.label}</div><div class="metric-value">${value}</div><div class="metric-note">${metric.note}</div>`;
+      refs.heroMetrics.appendChild(article);
+    });
+  }
 }
 
 function renderIncidents() {
+  if (!refs.eventList) {
+    return;
+  }
   refs.eventList.innerHTML = "";
   refs.eventList.classList.add("stagger-list");
   state.content.incidents.forEach((event, index) => {
@@ -297,6 +390,9 @@ function renderIncidents() {
 }
 
 function renderBulletins() {
+  if (!refs.bulletinTabs || !refs.newsList) {
+    return;
+  }
   const current = state.content.bulletins.find((item) => item.id === state.activeBulletin) || state.content.bulletins[0];
   state.activeBulletin = current.id;
 
@@ -338,29 +434,36 @@ function renderBulletins() {
 }
 
 function renderQuickLinks() {
-  refs.quickLinks.innerHTML = "";
-  state.content.quickLinks.forEach((link) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "news-item";
-    button.innerHTML = `<div class="news-topline"><span>${link.title}</span><span>${link.tag}</span></div><div class="news-meta">${link.description}</div>`;
-    button.addEventListener("click", () => {
-      document.querySelector(link.target)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (refs.quickLinks) {
+    refs.quickLinks.innerHTML = "";
+    state.content.quickLinks.forEach((link) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "news-item";
+      button.innerHTML = `<div class="news-topline"><span>${link.title}</span><span>${link.tag}</span></div><div class="news-meta">${link.description}</div>`;
+      button.addEventListener("click", () => {
+        navigateToTarget(link.target);
+      });
+      refs.quickLinks.appendChild(button);
     });
-    refs.quickLinks.appendChild(button);
-  });
+  }
 
-  refs.rhythmList.innerHTML = "";
-  state.content.rhythmCards.forEach((card) => {
-    const badgeTone = card.badge.includes("Serious") ? "severity-medium" : "severity-low";
-    const item = document.createElement("div");
-    item.className = "event-item";
-    item.innerHTML = `<div class="event-topline"><span>${card.title}</span><span class="severity-badge ${badgeTone}">${card.badge}</span></div><div class="event-meta">${card.description}</div>`;
-    refs.rhythmList.appendChild(item);
-  });
+  if (refs.rhythmList) {
+    refs.rhythmList.innerHTML = "";
+    state.content.rhythmCards.forEach((card) => {
+      const badgeTone = card.badge.includes("Serious") ? "severity-medium" : "severity-low";
+      const item = document.createElement("div");
+      item.className = "event-item";
+      item.innerHTML = `<div class="event-topline"><span>${card.title}</span><span class="severity-badge ${badgeTone}">${card.badge}</span></div><div class="event-meta">${card.description}</div>`;
+      refs.rhythmList.appendChild(item);
+    });
+  }
 }
 
 function renderZones() {
+  if (!refs.cityZones) {
+    return;
+  }
   refs.cityZones.innerHTML = "";
   state.content.zones.forEach((zone) => {
     const card = document.createElement("article");
@@ -372,6 +475,9 @@ function renderZones() {
 }
 
 function renderGallery() {
+  if (!refs.galleryGrid) {
+    return;
+  }
   refs.galleryGrid.innerHTML = "";
   state.content.gallery.forEach((item, index) => {
     const button = document.createElement("button");
@@ -385,6 +491,9 @@ function renderGallery() {
 }
 
 function renderStore() {
+  if (!refs.tierGrid) {
+    return;
+  }
   refs.tierGrid.innerHTML = "";
   state.content.tiers.forEach((tier) => {
     const card = document.createElement("article");
@@ -401,6 +510,9 @@ function renderStore() {
 }
 
 function renderTierSummary() {
+  if (!refs.summaryTier || !refs.extraCc) {
+    return;
+  }
   const tier = state.content.tiers.find((item) => item.id === state.selectedTier) || state.content.tiers[0];
   const extra = Number(refs.extraCc.value);
   refs.summaryTier.textContent = tier.name;
@@ -414,6 +526,9 @@ function renderTierSummary() {
 }
 
 function renderFaq() {
+  if (!refs.faqList) {
+    return;
+  }
   refs.faqList.innerHTML = "";
   state.content.faq.forEach((item, index) => {
     const article = document.createElement("article");
@@ -463,6 +578,9 @@ function createField(field) {
 }
 
 function renderReviewStep() {
+  if (!refs.formFields) {
+    return;
+  }
   const wrapper = document.createElement("div");
   wrapper.className = "field-stack full";
   wrapper.innerHTML = `
@@ -487,6 +605,9 @@ function renderReviewStep() {
 }
 
 function renderForm() {
+  if (!refs.form || !refs.formFields || !refs.stepper || !refs.stepLabel || !refs.nextStep || !refs.prevStep) {
+    return;
+  }
   const step = state.content.applicationSteps[state.currentStep];
   refs.stepLabel.textContent = `Step ${state.currentStep + 1} of ${state.content.applicationSteps.length}`;
   refs.nextStep.textContent = step.button;
@@ -510,6 +631,9 @@ function renderForm() {
 }
 
 function updatePreview() {
+  if (!refs.previewName) {
+    return;
+  }
   refs.previewName.textContent = state.formState.displayName || "Unregistered";
   refs.previewAge.textContent = state.formState.characterAge ? `Age ${state.formState.characterAge}` : "Age not set";
   refs.previewConcept.textContent = state.formState.concept || "No concept written yet. The right side of the page mirrors what the application currently says.";
@@ -521,7 +645,9 @@ function updatePreview() {
 
 function saveDraft() {
   writeLocalJson(LOCAL_KEYS.draft, state.formState);
-  refs.draftNote.textContent = "Draft saved automatically in this browser. Final applications save locally on this machine.";
+  if (refs.draftNote) {
+    refs.draftNote.textContent = "Draft saved automatically in this browser. Final applications save locally on this machine.";
+  }
 }
 
 function loadDraft() {
@@ -530,7 +656,9 @@ function loadDraft() {
     return;
   }
   Object.assign(state.formState, stored);
-  refs.draftNote.textContent = "Recovered your saved draft from this browser.";
+  if (refs.draftNote) {
+    refs.draftNote.textContent = "Recovered your saved draft from this browser.";
+  }
 }
 
 function clearDraftState() {
@@ -539,10 +667,14 @@ function clearDraftState() {
     state.formState[key] = "";
   });
   state.currentStep = 0;
-  refs.form.reset();
+  if (refs.form) {
+    refs.form.reset();
+  }
   renderForm();
   updatePreview();
-  refs.draftNote.textContent = "Draft cleared. Fresh slate.";
+  if (refs.draftNote) {
+    refs.draftNote.textContent = "Draft cleared. Fresh slate.";
+  }
   showToast("Draft cleared", "The local whitelist draft has been removed.");
 }
 
@@ -610,15 +742,22 @@ async function submitApplication(event) {
     state.formState[key] = "";
   });
   state.currentStep = 0;
-  refs.form.reset();
+  if (refs.form) {
+    refs.form.reset();
+  }
   renderForm();
   updatePreview();
   formatRuntime();
-  refs.draftNote.textContent = "Submission complete. Draft cleared.";
+  if (refs.draftNote) {
+    refs.draftNote.textContent = "Submission complete. Draft cleared.";
+  }
   showToast("Application sent", `${application.displayName || "Citizen"} has been added to the whitelist queue.`);
 }
 
 function renderLightbox(index) {
+  if (!refs.lightboxImage) {
+    return;
+  }
   const gallery = state.content.gallery;
   const item = gallery[(index + gallery.length) % gallery.length];
   state.galleryIndex = gallery.indexOf(item);
@@ -630,6 +769,9 @@ function renderLightbox(index) {
 }
 
 function openLightbox(index) {
+  if (!refs.lightbox) {
+    return;
+  }
   renderLightbox(index);
   refs.lightbox.classList.add("open");
   refs.lightbox.setAttribute("aria-hidden", "false");
@@ -637,6 +779,9 @@ function openLightbox(index) {
 }
 
 function closeLightbox() {
+  if (!refs.lightbox) {
+    return;
+  }
   refs.lightbox.classList.remove("open");
   refs.lightbox.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
@@ -661,8 +806,13 @@ function observeReveals() {
 
 function initParticles() {
   const canvas = document.getElementById("particle-field");
+  if (!canvas) {
+    return;
+  }
   const context = canvas.getContext("2d");
-  if (!context) return;
+  if (!context) {
+    return;
+  }
 
   const particles = [];
   const total = window.innerWidth < 700 ? 40 : 80;
@@ -685,63 +835,80 @@ function initParticles() {
   }
 
   resize();
-  for (let i = 0; i < total; i++) particles.push(makeParticle());
+  for (let i = 0; i < total; i += 1) {
+    particles.push(makeParticle());
+  }
 
   function draw() {
     context.clearRect(0, 0, canvas.width, canvas.height);
-    for (const p of particles) {
-      const dx = mouse.x - p.x;
-      const dy = mouse.y - p.y;
+    for (const particle of particles) {
+      const dx = mouse.x - particle.x;
+      const dy = mouse.y - particle.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      
+
       if (dist < 150) {
         const force = (150 - dist) / 1500;
-        p.vx -= dx * force;
-        p.vy -= dy * force;
+        particle.vx -= dx * force;
+        particle.vy -= dy * force;
       }
 
       context.beginPath();
-      context.fillStyle = `rgba(149,255,110,${p.a})`;
-      context.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      context.fillStyle = `rgba(149,255,110,${particle.a})`;
+      context.arc(particle.x, particle.y, particle.r, 0, Math.PI * 2);
       context.fill();
-      
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vx *= 0.99;
-      p.vy *= 0.99;
 
-      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vx *= 0.99;
+      particle.vy *= 0.99;
+
+      if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
+      if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
     }
     requestAnimationFrame(draw);
   }
 
   window.addEventListener("resize", resize);
-  window.addEventListener("mousemove", (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
+  window.addEventListener("mousemove", (event) => {
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
   });
   draw();
 }
 
 function rotateScene() {
+  if (!refs.sceneCopy) {
+    return;
+  }
   const scenes = state.content.sceneOptions;
   const next = scenes[Math.floor(Math.random() * scenes.length)];
   refs.sceneCopy.textContent = next;
-  
-  // Add screen shake
+
   document.body.style.animation = "none";
-  document.body.offsetHeight; // trigger reflow
+  document.body.offsetHeight;
   document.body.style.animation = "shake 0.4s cubic-bezier(.36,.07,.19,.97) both";
-  
+
   showToast("City vibe updated", "The hero panel just cycled to a new SinCity mood.");
 }
 
 function toggleTheme() {
-  state.theme = state.theme === "neon" ? "heat" : "neon";
-  document.body.classList.toggle("theme-heat", state.theme === "heat");
-  refs.themeIcon.textContent = state.theme === "neon" ? "🟢" : "🔴";
-  showToast("Theme switched", `City atmosphere shifted to ${state.theme === "neon" ? "Neon Noir" : "High Heat"}.`);
+  const themes = ["neon", "pd", "ems"];
+  const currentIndex = themes.indexOf(state.theme);
+  const nextIndex = (currentIndex + 1) % themes.length;
+  state.theme = themes[nextIndex];
+
+  document.body.classList.remove("theme-pd", "theme-ems");
+  if (state.theme !== "neon") {
+    document.body.classList.add(`theme-${state.theme}`);
+  }
+
+  if (refs.themeIcon) {
+    const icons = { neon: "N", pd: "P", ems: "E" };
+    refs.themeIcon.textContent = icons[state.theme];
+  }
+
+  const labels = { neon: "Neon Noir", pd: "Police Dept", ems: "Emergency Medical" };
+  showToast("Atmosphere shifted", `City visual profile set to ${labels[state.theme]}.`);
 }
 
 function hydrateContent(payload, options = {}) {
@@ -754,6 +921,9 @@ function hydrateContent(payload, options = {}) {
   state.runtime = enrichRuntime(payload.runtime, state.applications);
   state.activeBulletin = preserveSelections ? previousBulletin : payload.content.bulletins[0]?.id || null;
   state.selectedTier = preserveSelections ? previousTier : payload.content.tiers[0]?.id || null;
+
+  if (refs.brandName) refs.brandName.textContent = state.content.site.name;
+  if (refs.brandTag) refs.brandTag.textContent = state.content.site.tag;
   renderNav();
   renderHero();
   renderIncidents();
@@ -835,7 +1005,7 @@ function mutateLocalRuntime() {
 }
 
 async function bootstrap() {
-  const preferLocalMode = window.location.protocol === "file:" || window.location.pathname.endsWith(".html");
+  const preferLocalMode = window.location.protocol === "file:";
   if (preferLocalMode) {
     state.mode = "local";
     return loadLocalBootstrap();
@@ -853,6 +1023,47 @@ async function bootstrap() {
   }
 }
 
+function attachEvents() {
+  refs.randomizeScene?.addEventListener("click", rotateScene);
+  refs.themeToggle?.addEventListener("click", toggleTheme);
+
+  refs.prevStep?.addEventListener("click", () => {
+    state.currentStep = Math.max(0, state.currentStep - 1);
+    renderForm();
+  });
+  refs.clearDraft?.addEventListener("click", clearDraftState);
+  refs.form?.addEventListener("submit", (event) => {
+    submitApplication(event).catch((error) => showToast("Submission failed", error.message));
+  });
+
+  refs.extraCc?.addEventListener("input", renderTierSummary);
+  refs.checkoutButton?.addEventListener("click", () => {
+    const tier = state.content.tiers.find((item) => item.id === state.selectedTier) || state.content.tiers[0];
+    showToast("Supporter pack ready", `${tier.name} bundle prepared with ${refs.extraCc.value} CC extra.`);
+  });
+
+  refs.closeLightbox?.addEventListener("click", closeLightbox);
+  refs.prevGallery?.addEventListener("click", () => renderLightbox(state.galleryIndex - 1));
+  refs.nextGallery?.addEventListener("click", () => renderLightbox(state.galleryIndex + 1));
+  refs.lightbox?.addEventListener("click", (event) => {
+    if (event.target === refs.lightbox) {
+      closeLightbox();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && refs.lightbox?.classList.contains("open")) {
+      closeLightbox();
+    }
+    if (refs.lightbox?.classList.contains("open") && event.key === "ArrowRight") {
+      renderLightbox(state.galleryIndex + 1);
+    }
+    if (refs.lightbox?.classList.contains("open") && event.key === "ArrowLeft") {
+      renderLightbox(state.galleryIndex - 1);
+    }
+  });
+}
+
 async function init() {
   const payload = await bootstrap();
   hydrateContent(payload);
@@ -860,6 +1071,7 @@ async function init() {
   renderForm();
   updatePreview();
   initParticles();
+  attachEvents();
 
   if (state.mode === "api") {
     attachApiLiveStream();
@@ -869,40 +1081,6 @@ async function init() {
     showToast("Local preview mode", "Running fully in-browser. Content and applications save locally for preview.");
   }
 
-  refs.randomizeScene.addEventListener("click", rotateScene);
-  refs.themeToggle.addEventListener("click", toggleTheme);
-  refs.prevStep.addEventListener("click", () => {
-    state.currentStep = Math.max(0, state.currentStep - 1);
-    renderForm();
-  });
-  refs.clearDraft.addEventListener("click", clearDraftState);
-  refs.form.addEventListener("submit", (event) => {
-    submitApplication(event).catch((error) => showToast("Submission failed", error.message));
-  });
-  refs.extraCc.addEventListener("input", renderTierSummary);
-  refs.checkoutButton.addEventListener("click", () => {
-    const tier = state.content.tiers.find((item) => item.id === state.selectedTier);
-    showToast("Supporter pack ready", `${tier.name} bundle prepared with ${refs.extraCc.value} CC extra.`);
-  });
-  refs.closeLightbox.addEventListener("click", closeLightbox);
-  refs.prevGallery.addEventListener("click", () => renderLightbox(state.galleryIndex - 1));
-  refs.nextGallery.addEventListener("click", () => renderLightbox(state.galleryIndex + 1));
-  refs.lightbox.addEventListener("click", (event) => {
-    if (event.target === refs.lightbox) {
-      closeLightbox();
-    }
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && refs.lightbox.classList.contains("open")) {
-      closeLightbox();
-    }
-    if (refs.lightbox.classList.contains("open") && event.key === "ArrowRight") {
-      renderLightbox(state.galleryIndex + 1);
-    }
-    if (refs.lightbox.classList.contains("open") && event.key === "ArrowLeft") {
-      renderLightbox(state.galleryIndex - 1);
-    }
-  });
   window.setInterval(updateClocks, 1000);
 }
 

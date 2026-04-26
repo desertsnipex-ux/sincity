@@ -1,11 +1,11 @@
 {
-  "online": 145,
-  "queue": 60,
-  "storyDensity": 92,
+  "online": 146,
+  "queue": 46,
+  "storyDensity": 88,
   "heatLevel": "Hot",
-  "economyShift": 24.4,
+  "economyShift": 27.8,
   "weatherLabel": "Neon Rain",
-  "dispatchMood": "Heated",
+  "dispatchMood": "Suspiciously Quiet",
   "restartAt": "2026-04-26T18:30:00.000Z",
   "serverTimeZone": "America/Los_Angeles",
   "maxPlayers": 256
