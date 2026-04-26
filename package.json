@@ -1,0 +1,9 @@
+{
+  "name": "sincity-by-enact",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dynamic SinCity GTA RP website with local admin and JSON API.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

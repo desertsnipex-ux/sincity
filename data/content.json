@@ -1,0 +1,284 @@
+{
+  "site": {
+    "name": "SinCity",
+    "tag": "By Enact",
+    "eyebrow": "Neon grit. Serious stories. Loud city energy.",
+    "heroTitle": "Own the night in",
+    "heroAccent": "SinCity",
+    "heroDescription": "SinCity by Enact is a full-throttle GTA RP world built for cinematic police work, criminal arcs, creator moments, and civilian chaos with just enough style to make every traffic stop feel like a trailer scene.",
+    "quickPitch": "The skyline is humming, the imports are polished, and somebody definitely just filed paperwork for a nightclub they should not be trusted with."
+  },
+  "navigation": [
+    { "id": "pulse", "label": "Server Pulse" },
+    { "id": "districts", "label": "Districts" },
+    { "id": "gallery", "label": "Gallery" },
+    { "id": "apply", "label": "Whitelist" },
+    { "id": "store", "label": "Store" }
+  ],
+  "sceneOptions": [
+    "The skyline is humming, the imports are polished, and somebody definitely just filed paperwork for a nightclub they should not be trusted with.",
+    "Dispatch is busy, the casino valet is stressed, and somewhere downtown a perfectly legal business meeting is being held with way too many lookouts.",
+    "Half the city is trying to look respectable, the other half is trying not to get searched, and somehow both groups are stuck in the same traffic jam.",
+    "A civilian market is drawing influencers, off-duty officers, hustlers, and one person who absolutely did not understand the parking signs."
+  ],
+  "weatherModes": ["Acid Dawn", "Neon Rain", "Smog Gold", "Midnight Hum", "Green Fog"],
+  "dispatchModes": ["Spicy", "Contained", "Heated", "Chaotic Good", "Suspiciously Quiet"],
+  "metrics": [
+    { "label": "Peak Queue", "key": "queue", "suffix": "", "note": "Rush hour priority starts to matter fast." },
+    { "label": "Custom Systems", "value": "60+", "note": "Economy, factions, dispatch, property, imports, events." },
+    { "label": "Story Density", "key": "storyDensity", "suffix": "%", "note": "Measured in suspicious alley meetings per hour." }
+  ],
+  "quickLinks": [
+    {
+      "title": "Whitelist application",
+      "tag": "Ready",
+      "description": "Start your character concept, save a draft locally, and finish in one pass.",
+      "target": "#apply"
+    },
+    {
+      "title": "Supporter store",
+      "tag": "Preview",
+      "description": "Compare queue perks, imports, and role boosts with an interactive selector.",
+      "target": "#store"
+    },
+    {
+      "title": "Visual gallery",
+      "tag": "Open",
+      "description": "Pop open large previews of the SinCity branding and dashboard concepts.",
+      "target": "#gallery"
+    }
+  ],
+  "incidents": [
+    {
+      "id": "evt-1",
+      "title": "PD pursuit through Pillbox",
+      "severity": "high",
+      "time": "2 mins ago",
+      "details": "A stolen Komoda just bounced off two medians, one fruit cart, and the patience of every officer on duty."
+    },
+    {
+      "id": "evt-2",
+      "title": "Night market overflow",
+      "severity": "low",
+      "time": "11 mins ago",
+      "details": "Civilians packed Legion Square for a late market event and somebody tried to sell suspiciously glowing lemonade."
+    },
+    {
+      "id": "evt-3",
+      "title": "Casino valet dispute",
+      "severity": "medium",
+      "time": "18 mins ago",
+      "details": "A high-end import was taken without permission, which is technically grand theft and emotionally very rude."
+    },
+    {
+      "id": "evt-4",
+      "title": "Warehouse alarm trip",
+      "severity": "medium",
+      "time": "25 mins ago",
+      "details": "South docks sensors tripped during a power flutter, so naturally everyone assumed it was a heist."
+    }
+  ],
+  "bulletins": [
+    {
+      "id": "economy",
+      "label": "Economy",
+      "headline": "New business registration wave",
+      "title": "City economy is running hot but stable",
+      "summary": "Local businesses are expanding, imports are moving, and the city feels busy without descending into total spreadsheet misery. Good time to push legal arcs and storefront stories.",
+      "points": ["Business grants open", "Import review up tonight", "Fuel prices stable"]
+    },
+    {
+      "id": "factions",
+      "label": "Factions",
+      "headline": "Street heat and organized response",
+      "title": "Faction pressure is climbing across the south side",
+      "summary": "Territory talk is getting louder, police surveillance is heavier, and the next reckless meeting in a parking structure is likely to go very badly.",
+      "points": ["Gang heat moderate", "Joint task force active", "Evidence lockers filling up"]
+    },
+    {
+      "id": "events",
+      "label": "Events",
+      "headline": "Tonight's social calendar is loaded",
+      "title": "Community events are carrying the softer side of the city",
+      "summary": "Car meets, markets, music nights, and casino gatherings keep civilians active between bigger law and criminal beats, which makes the whole place feel more like a world than a mechanic list.",
+      "points": ["Car meet at 22:00", "Market night returning", "Club grand opening teased"]
+    }
+  ],
+  "rhythmCards": [
+    {
+      "title": "Priority timezone",
+      "badge": "UK + NA",
+      "description": "Built to feel active for both evening UK players and overlapping North America sessions."
+    },
+    {
+      "title": "Server tone",
+      "badge": "Serious RP",
+      "description": "Stylish presentation, grounded gameplay loop, and enough bite that people remember their scenes."
+    },
+    {
+      "title": "Visual flavor",
+      "badge": "Neon Noir",
+      "description": "Strong green identity, layered motion, and a little drama without turning into pure gimmick."
+    }
+  ],
+  "zones": [
+    {
+      "icon": "PD",
+      "title": "Law and Order",
+      "description": "Dispatch pressure, clean comms, proper reports, and pursuits that escalate from routine to cinematic in two intersections flat.",
+      "meterLabel": "Patrol demand",
+      "meterValue": 82
+    },
+    {
+      "icon": "CR",
+      "title": "Civilian Hustle",
+      "description": "Businesses, odd jobs, public events, and just enough bureaucracy to make a nightclub opening feel suspiciously official.",
+      "meterLabel": "Business openings",
+      "meterValue": 69
+    },
+    {
+      "icon": "GX",
+      "title": "Criminal Arc",
+      "description": "Heat management, faction pride, careful escalation, and conversations in parking garages that definitely are not about legal commerce.",
+      "meterLabel": "Street tension",
+      "meterValue": 91
+    },
+    {
+      "icon": "MX",
+      "title": "Creator Fuel",
+      "description": "Good-looking branding, event hooks, and enough site motion that clips, photos, and server promos have material to work with.",
+      "meterLabel": "Clip potential",
+      "meterValue": 88
+    }
+  ],
+  "gallery": [
+    {
+      "title": "Brand Key Art",
+      "description": "Wide-format SinCity identity piece for hero sections, splash screens, and launch promos.",
+      "image": "assets/logo-wide.png",
+      "layout": "large"
+    },
+    {
+      "title": "Dashboard Moodboard",
+      "description": "The reference dashboard energy translated into a more usable site structure.",
+      "image": "assets/dashboard-reference.png",
+      "layout": "medium"
+    },
+    {
+      "title": "Faction Emblem",
+      "description": "Pure iconography for loading screens, server cards, and branding detail.",
+      "image": "assets/emblem-hero.png",
+      "layout": "small"
+    },
+    {
+      "title": "Neon Detail",
+      "description": "A tighter crop that works well for social previews and event cards.",
+      "image": "assets/logo-wide.png",
+      "layout": "small"
+    },
+    {
+      "title": "Control Room View",
+      "description": "Useful as a reference panel for rules, events, tiers, and application funnels.",
+      "image": "assets/dashboard-reference.png",
+      "layout": "wide"
+    }
+  ],
+  "applicationSteps": [
+    {
+      "name": "Identity",
+      "help": "Basic applicant info and your in-city age bracket.",
+      "button": "Next step",
+      "fields": [
+        { "key": "discord", "label": "Discord ID", "type": "text", "required": true, "placeholder": "enact_player#0001" },
+        { "key": "displayName", "label": "Display name", "type": "text", "required": true, "placeholder": "Your main name" },
+        { "key": "characterAge", "label": "Character age", "type": "select", "required": true, "options": ["18-21", "22-27", "28-35", "36+"] },
+        { "key": "timezone", "label": "Timezone", "type": "select", "required": true, "options": ["UK", "EU", "NA East", "NA West", "Other"] }
+      ]
+    },
+    {
+      "name": "Concept",
+      "help": "Give the city a real character pitch instead of a sentence fragment.",
+      "button": "Next step",
+      "fields": [
+        { "key": "playstyle", "label": "Main playstyle", "type": "select", "required": true, "options": ["Civilian", "Police / EMS", "Business owner", "Criminal arc", "Creator / hybrid"] },
+        { "key": "hours", "label": "RP experience", "type": "select", "required": true, "options": ["Brand new", "Under 100 hours", "100-500 hours", "500+ hours"] },
+        { "key": "concept", "label": "Character summary", "type": "textarea", "required": true, "full": true, "placeholder": "Who are they, what do they want, and why would people remember meeting them?" }
+      ]
+    },
+    {
+      "name": "Readiness",
+      "help": "A few checks to keep the city smoother once you arrive.",
+      "button": "Next step",
+      "fields": [
+        { "key": "voice", "label": "Working microphone", "type": "select", "required": true, "options": ["Yes", "Needs setup"] },
+        { "key": "rules", "label": "Rules read", "type": "select", "required": true, "options": ["Yes", "Still reading"] },
+        { "key": "availability", "label": "Weekly availability", "type": "select", "required": true, "options": ["1-2 nights", "3-4 nights", "Most evenings", "Varies"] },
+        { "key": "notes", "label": "Extra notes", "type": "textarea", "required": false, "full": true, "placeholder": "Optional details, faction interests, creator plans, or preferred arcs." }
+      ]
+    },
+    {
+      "name": "Review",
+      "help": "Final pass before the city clerk pretends to be impressed.",
+      "button": "Submit application",
+      "fields": []
+    }
+  ],
+  "tiers": [
+    {
+      "id": "bronze",
+      "name": "Bronze",
+      "label": "Bronze Supporter",
+      "price": 500,
+      "queue": "Level 1",
+      "imports": 0,
+      "tone": "Clean and useful",
+      "audience": "New regulars",
+      "skip": "Fair",
+      "accent": "#c88a4d",
+      "description": "Queue assistance, a clean cosmetic boost, and enough server vanity to start feeling mildly important.",
+      "perks": ["Level 1 queue priority", "Custom license plate", "Exclusive Discord flair"]
+    },
+    {
+      "id": "gold",
+      "name": "Gold",
+      "label": "Gold Supporter",
+      "price": 1500,
+      "queue": "Level 3",
+      "imports": 1,
+      "tone": "Loud and practical",
+      "audience": "Frequent players",
+      "skip": "Strong",
+      "accent": "#e8ff97",
+      "description": "A big step up for regulars who want faster access, louder status, and better import leverage.",
+      "perks": ["Level 3 queue priority", "One import discount token", "Faction event priority"]
+    },
+    {
+      "id": "platinum",
+      "name": "Platinum",
+      "label": "Platinum Supporter",
+      "price": 1800,
+      "queue": "Level 4",
+      "imports": 2,
+      "tone": "Very extra",
+      "audience": "Power regulars",
+      "skip": "Aggressive",
+      "accent": "#d4e1e8",
+      "description": "The flashy lane for players who hate queues and enjoy seeing their name show up in all the right places.",
+      "perks": ["Level 4 queue priority", "Priority vehicle import review", "Expanded property styling options"]
+    }
+  ],
+  "faq": [
+    {
+      "question": "Is this a real working page or just a design?",
+      "answer": "It is a working local app with a live JSON API, server-side persistence for whitelist applications, and a content admin page."
+    },
+    {
+      "question": "Can the whitelist form be connected to Discord or a backend later?",
+      "answer": "Yes. The submission shape is already structured cleanly enough to post into Discord webhooks, Supabase, Firebase, or a custom backend."
+    },
+    {
+      "question": "Does it work on mobile too?",
+      "answer": "Yes. The layout collapses cleanly to single-column sections on smaller screens, and the dashboard, form, gallery, and store remain usable."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "online": 122,
+  "queue": 45,
+  "storyDensity": 99,
+  "heatLevel": "Moderate",
+  "economyShift": 27.4,
+  "weatherLabel": "Midnight Hum",
+  "dispatchMood": "Suspiciously Quiet",
+  "restartAt": "2026-04-26T18:30:00.000Z",
+  "serverTimeZone": "America/Los_Angeles",
+  "maxPlayers": 256
+}
