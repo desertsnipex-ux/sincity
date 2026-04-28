@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SinCity Rules</title>
+  <link rel="icon" href="assets/emblem-hero.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="rules">
+  <div class="page-shell">
+    <div class="ambient-backdrop"></div>
+    <div class="ambient-grid"></div>
+    <canvas id="particle-field"></canvas>
+    <div class="scanlines"></div>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html#home" aria-label="SinCity home">
+          <div class="brand-mark">
+            <img src="assets/emblem-hero.png" alt="SinCity emblem">
+          </div>
+          <div class="brand-copy">
+            <div class="brand-name" id="brand-name">SinCity</div>
+            <div class="brand-tag" id="brand-tag">By Enact</div>
+          </div>
+        </a>
+        <nav class="nav-links" id="nav-links" aria-label="Primary"></nav>
+        <div class="header-actions"></div>
+      </div>
+    </header>
+
+    <main class="subpage-main">
+      <section class="section section-band subpage-intro">
+        <div class="section-frame">
+          <div class="section-heading reveal">
+            <div>
+              <div class="section-kicker">City Ordinances</div>
+              <h1 class="section-title">The rules of the game</h1>
+            </div>
+            <p class="section-description">
+              SinCity is a high-standard roleplay environment. These rules ensure that everyone can enjoy a fair and immersive experience.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-band" id="rules">
+        <div class="section-frame" id="rules-list">
+          <!-- Populated by app.js -->
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div>SinCity by Enact. Dynamic local build with API-backed content, live stats, and application storage.</div>
+        <div><a href="admin.html">Admin dashboard</a></div>
+      </div>
+    </footer>
+
+    <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

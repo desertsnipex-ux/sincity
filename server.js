@@ -1,420 +1,331 @@
-const http = require("http");
-const https = require("https");
+require('dotenv').config();
+const express = require("express");
+const session = require("express-session");
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const DiscordStrategy = require("passport-discord").Strategy;
+const LocalStrategy = require("passport-local").Strategy;
+const bcrypt = require("bcryptjs");
+const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
-const { URL } = require("url");
+const https = require("https");
+const cors = require("cors");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
+const multer = require("multer");
+const User = require("./models/User");
 
-const ROOT = __dirname;
+const app = express();
+const ROOT = path.resolve(__dirname);
 const DATA_DIR = path.join(ROOT, "data");
 const CONTENT_FILE = path.join(DATA_DIR, "content.json");
 const APPLICATIONS_FILE = path.join(DATA_DIR, "applications.json");
 const RUNTIME_FILE = path.join(DATA_DIR, "runtime.json");
-const PORT = Number(process.env.PORT || 4173);
-const REQUIRE_ADMIN_KEY = process.env.SINCITY_REQUIRE_ADMIN_KEY === "true";
-const ADMIN_KEY = process.env.SINCITY_ADMIN_KEY || "sincity-admin";
-const DISCORD_WEBHOOK_URL = process.env.SINCITY_DISCORD_WEBHOOK || "";
 
-const MIME_TYPES = {
-  ".html": "text/html; charset=utf-8",
-  ".js": "application/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".svg": "image/svg+xml",
-  ".ico": "image/x-icon"
-};
+const PORT = process.env.PORT || 4173;
 
-const sseClients = new Set();
+console.log("--- SinCity Server Initialization ---");
+console.log(`Root Directory: ${ROOT}`);
 
+// MongoDB Connection
+if (!process.env.MONGODB_URI) {
+  console.error("CRITICAL: MONGODB_URI is not defined in .env file");
+  process.exit(1);
+}
+
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("SUCCESS: Connected to MongoDB Atlas"))
+  .catch(err => {
+    console.error("ERROR: MongoDB connection failed:", err.message);
+    process.exit(1);
+  });
+
+// Email Transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// Multer Configuration for Avatar Uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(ROOT, 'uploads', 'avatars');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'avatar-' + req.user._id + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png|webp/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    if (mimetype && extname) return cb(null, true);
+    cb(new Error("Only images (jpeg, jpg, png, webp) are allowed"));
+  }
+});
+
+// Middleware
+app.use(cors());
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || "sincity-ultra-secret-key-2026",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: false,
+    maxAge: 24 * 60 * 60 * 1000 
+  }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport Configuration
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser(async (id, done) => {
+  try { const user = await User.findById(id); done(null, user); } 
+  catch (err) { done(err, null); }
+});
+
+// Local Strategy
+passport.use(new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+  try {
+    const user = await User.findOne({ email });
+    if (!user || !user.password) return done(null, false, { message: 'Invalid credentials' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return done(null, false, { message: 'Invalid credentials' });
+    return done(null, user);
+  } catch (err) { return done(err); }
+}));
+
+// Google Strategy
+if (process.env.GOOGLE_CLIENT_ID) {
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    passReqToCallback: true
+  }, async (req, accessToken, refreshToken, profile, done) => {
+    try {
+      if (req.user) {
+        req.user.googleId = profile.id;
+        await req.user.save();
+        return done(null, req.user);
+      }
+      let user = await User.findOne({ googleId: profile.id });
+      if (!user) {
+        const email = profile.emails[0].value;
+        user = await User.findOne({ email });
+        if (user) { user.googleId = profile.id; await user.save(); }
+        else { user = await User.create({ googleId: profile.id, email, displayName: profile.displayName, avatar: profile.photos[0].value }); }
+      }
+      return done(null, user);
+    } catch (err) { return done(err); }
+  }));
+}
+
+// Discord Strategy
+if (process.env.DISCORD_CLIENT_ID) {
+  passport.use(new DiscordStrategy({
+    clientID: process.env.DISCORD_CLIENT_ID,
+    clientSecret: process.env.DISCORD_CLIENT_SECRET,
+    callbackURL: process.env.DISCORD_CALLBACK_URL,
+    scope: ['identify', 'email'],
+    passReqToCallback: true
+  }, async (req, accessToken, refreshToken, profile, done) => {
+    try {
+      if (req.user) {
+        req.user.discordId = profile.id;
+        await req.user.save();
+        return done(null, req.user);
+      }
+      let user = await User.findOne({ discordId: profile.id });
+      if (!user) {
+        user = await User.findOne({ email: profile.email });
+        if (user) { user.discordId = profile.id; await user.save(); }
+        else { user = await User.create({ discordId: profile.id, email: profile.email, displayName: profile.username, avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` }); }
+      }
+      return done(null, user);
+    } catch (err) { return done(err); }
+  }));
+}
+
+// --- AUTH ROUTES ---
+app.post("/auth/signup", async (req, res) => {
+  try {
+    const { email, password, displayName } = req.body;
+    let user = await User.findOne({ email });
+    if (user) return res.status(400).json({ error: "Email already registered" });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user = await User.create({ email, password: hashedPassword, displayName });
+    req.login(user, (err) => {
+      if (err) return res.status(500).json({ error: "Login failed" });
+      res.json({ ok: true });
+    });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post("/auth/login", (req, res, next) => {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!user) return res.status(400).json({ error: info.message });
+    req.login(user, (err) => {
+      if (err) return res.status(500).json({ error: "Login failed" });
+      res.json({ ok: true });
+    });
+  })(req, res, next);
+});
+
+// Forgot Password
+app.post("/auth/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ error: "No account with that email." });
+
+    const token = crypto.randomBytes(20).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    const mailOptions = {
+      to: user.email,
+      from: process.env.EMAIL_USER,
+      subject: 'SinCity Central Mainframe - Password Reset',
+      text: `You are receiving this because you (or someone else) have requested the reset of the password for your citizen record.\n\n` +
+        `Please click on the following link, or paste this into your browser to complete the process:\n\n` +
+        `http://${req.headers.host}/reset-password.html?token=${token}\n\n` +
+        `If you did not request this, please ignore this email and your password will remain unchanged.\n`
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ ok: true, message: "Email sent." });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Reset Password
+app.post("/auth/reset-password", async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    const user = await User.findOne({ 
+      resetPasswordToken: token, 
+      resetPasswordExpires: { $gt: Date.now() } 
+    });
+
+    if (!user) return res.status(400).json({ error: "Password reset token is invalid or has expired." });
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ ok: true, message: "Password updated." });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+app.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), (req, res) => res.redirect("/profile"));
+
+app.get("/auth/discord", passport.authenticate("discord"));
+app.get("/auth/discord/callback", (req, res, next) => {
+  passport.authenticate("discord", { failureRedirect: "/login" })(req, res, next);
+}, (req, res) => res.redirect("/profile"));
+
+app.get("/auth/discord/link", (req, res, next) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
+  passport.authorize("discord")(req, res, next);
+});
+
+app.get("/auth/logout", (req, res) => {
+  req.logout(() => res.redirect("/"));
+});
+
+// --- PAGE ROUTES ---
+app.get("/login", (req, res) => res.sendFile(path.join(ROOT, "login.html")));
+app.get("/profile", (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
+  res.sendFile(path.join(ROOT, "profile.html"));
+});
+app.get("/forgot-password", (req, res) => res.sendFile(path.join(ROOT, "forgot-password.html")));
+app.get("/reset-password", (req, res) => res.sendFile(path.join(ROOT, "reset-password.html")));
+app.get("/apply.html", (req, res) => res.sendFile(path.join(ROOT, "apply.html")));
+
+// --- API ROUTES ---
+app.get("/api/me", (req, res) => res.json({ authenticated: req.isAuthenticated(), user: req.user || null }));
+
+// Upload Avatar
+app.post("/api/me/avatar", (req, res, next) => {
+  if (!req.isAuthenticated()) return res.status(401).json({ error: "Authorized session required" });
+  next();
+}, upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+    
+    const user = await User.findById(req.user._id);
+    if (user.avatar && user.avatar.startsWith('/uploads/avatars/')) {
+      const oldPath = path.join(ROOT, user.avatar);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+    
+    user.avatar = `/uploads/avatars/${req.file.filename}`;
+    await user.save();
+    
+    res.json({ ok: true, avatar: user.avatar });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update Profile
+app.put("/api/me", async (req, res) => {
+  if (!req.isAuthenticated()) return res.status(401).json({ error: "Authorized session required" });
+  try {
+    const { displayName, bio } = req.body;
+    const user = await User.findById(req.user._id);
+    if (displayName) user.displayName = displayName;
+    if (bio !== undefined) user.bio = bio;
+    await user.save();
+    res.json({ ok: true, user });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+const readJson = (f) => JSON.parse(fs.readFileSync(f, "utf8"));
+const writeJson = (f, v) => fs.writeFileSync(f, JSON.stringify(v, null, 2));
 let content = readJson(CONTENT_FILE);
 let applications = readJson(APPLICATIONS_FILE);
 let runtime = readJson(RUNTIME_FILE);
 
-function readJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
-}
-
-function writeJson(filePath, value) {
-  fs.writeFileSync(filePath, JSON.stringify(value, null, 2));
-}
-
-function sendJson(response, statusCode, value) {
-  response.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
-  response.end(JSON.stringify(value));
-}
-
-function sendFile(response, filePath) {
-  const extension = path.extname(filePath).toLowerCase();
-  const type = MIME_TYPES[extension] || "application/octet-stream";
-  fs.readFile(filePath, (error, data) => {
-    if (error) {
-      sendJson(response, 404, { error: "Not found" });
-      return;
-    }
-    response.writeHead(200, { "Content-Type": type });
-    response.end(data);
-  });
-}
-
-function parseBody(request) {
-  return new Promise((resolve, reject) => {
-    let data = "";
-    request.on("data", (chunk) => {
-      data += chunk;
-      if (data.length > 2_000_000) {
-        reject(new Error("Body too large"));
-        request.destroy();
-      }
-    });
-    request.on("end", () => {
-      if (!data) {
-        resolve({});
-        return;
-      }
-      try {
-        resolve(JSON.parse(data));
-      } catch (error) {
-        reject(error);
-      }
-    });
-    request.on("error", reject);
-  });
-}
-
-function normalizeApplications(list) {
-  return list.slice().sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
-}
-
-function getPublicState() {
-  return {
-    content,
-    runtime: {
-      ...runtime,
-      localMode: true,
-      adminProtected: REQUIRE_ADMIN_KEY,
-      applicationCount: applications.length,
-      pendingApplications: applications.filter((item) => item.status === "pending").length
-    }
-  };
-}
-
-function broadcast(type, payload) {
-  const message = `event: ${type}\ndata: ${JSON.stringify(payload)}\n\n`;
-  for (const client of sseClients) {
-    client.write(message);
-  }
-}
-
-function requireAdmin(request, response) {
-  if (!REQUIRE_ADMIN_KEY) {
-    return true;
-  }
-  const key = request.headers["x-admin-key"];
-  if (key !== ADMIN_KEY) {
-    sendJson(response, 401, { error: "Admin key required." });
-    return false;
-  }
-  return true;
-}
-
-function createApplication(payload) {
-  const now = new Date().toISOString();
-  return {
-    id: `app-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    status: "pending",
-    createdAt: now,
-    updatedAt: now,
-    discord: String(payload.discord || "").trim(),
-    displayName: String(payload.displayName || "").trim(),
-    characterAge: String(payload.characterAge || "").trim(),
-    timezone: String(payload.timezone || "").trim(),
-    playstyle: String(payload.playstyle || "").trim(),
-    hours: String(payload.hours || "").trim(),
-    concept: String(payload.concept || "").trim(),
-    voice: String(payload.voice || "").trim(),
-    rules: String(payload.rules || "").trim(),
-    availability: String(payload.availability || "").trim(),
-    notes: String(payload.notes || "").trim()
-  };
-}
-
-function validateApplication(application) {
-  const required = ["discord", "displayName", "characterAge", "timezone", "playstyle", "hours", "concept", "voice", "rules", "availability"];
-  for (const field of required) {
-    if (!application[field]) {
-      return `Missing ${field}.`;
-    }
-  }
-  return null;
-}
-
-function updateRuntimeFromInput(input) {
-  runtime = {
-    ...runtime,
-    online: Number(input.online ?? runtime.online),
-    queue: Number(input.queue ?? runtime.queue),
-    storyDensity: Number(input.storyDensity ?? runtime.storyDensity),
-    heatLevel: String(input.heatLevel ?? runtime.heatLevel),
-    economyShift: Number(input.economyShift ?? runtime.economyShift),
-    weatherLabel: String(input.weatherLabel ?? runtime.weatherLabel),
-    dispatchMood: String(input.dispatchMood ?? runtime.dispatchMood),
-    restartAt: String(input.restartAt ?? runtime.restartAt),
-    serverTimeZone: String(input.serverTimeZone ?? runtime.serverTimeZone),
-    maxPlayers: Number(input.maxPlayers ?? runtime.maxPlayers)
-  };
-  writeJson(RUNTIME_FILE, runtime);
-}
-
-function mutateRuntime() {
-  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-  runtime.online = clamp(runtime.online + Math.floor(Math.random() * 7) - 3, 90, runtime.maxPlayers);
-  runtime.queue = clamp(runtime.queue + Math.floor(Math.random() * 5) - 2, 8, 70);
-  runtime.storyDensity = clamp(runtime.storyDensity + Math.floor(Math.random() * 5) - 2, 88, 100);
-  runtime.economyShift = Math.round((runtime.economyShift + (Math.random() * 1.8 - 0.9)) * 10) / 10;
-
-  const heatOptions = ["Low", "Moderate", "Hot", "Messy"];
-  if (Math.random() > 0.72) {
-    runtime.heatLevel = heatOptions[Math.floor(Math.random() * heatOptions.length)];
-  }
-  if (Math.random() > 0.75) {
-    runtime.weatherLabel = content.weatherModes[Math.floor(Math.random() * content.weatherModes.length)];
-  }
-  if (Math.random() > 0.76) {
-    runtime.dispatchMood = content.dispatchModes[Math.floor(Math.random() * content.dispatchModes.length)];
-  }
-  writeJson(RUNTIME_FILE, runtime);
-  broadcast("runtime", getPublicState().runtime);
-}
-
-function injectIncident(input) {
-  const nowLabel = input.time || "moments ago";
-  const newIncident = {
-    id: `evt-${Date.now()}`,
-    title: String(input.title || "New incident"),
-    severity: ["low", "medium", "high"].includes(input.severity) ? input.severity : "medium",
-    time: String(nowLabel),
-    details: String(input.details || "Something suspicious happened and the city is pretending not to notice.")
-  };
-  content.incidents.unshift(newIncident);
-  content.incidents = content.incidents.slice(0, 8);
-  writeJson(CONTENT_FILE, content);
-  broadcast("content", { incidents: content.incidents, bulletins: content.bulletins, gallery: content.gallery });
-  return newIncident;
-}
-
-function applySnapshot(snapshot) {
-  if (!snapshot || typeof snapshot !== "object") {
-    throw new Error("Snapshot payload is missing.");
-  }
-  if (!snapshot.content || !snapshot.runtime || !Array.isArray(snapshot.applications)) {
-    throw new Error("Snapshot must include content, runtime, and applications.");
-  }
-  content = snapshot.content;
-  runtime = snapshot.runtime;
-  applications = snapshot.applications;
-  writeJson(CONTENT_FILE, content);
-  writeJson(RUNTIME_FILE, runtime);
-  writeJson(APPLICATIONS_FILE, applications);
-}
-
-function routeStatic(requestPath, response) {
-  const cleanPath = requestPath === "/" ? "/index.html" : requestPath === "/admin" ? "/admin.html" : requestPath;
-  const resolvedPath = path.normalize(path.join(ROOT, cleanPath));
-  if (!resolvedPath.startsWith(ROOT)) {
-    sendJson(response, 403, { error: "Forbidden" });
-    return;
-  }
-  sendFile(response, resolvedPath);
-}
-
-async function sendDiscordWebhook(application) {
-  if (!DISCORD_WEBHOOK_URL) return;
-
-  const payload = {
-    embeds: [{
-      title: "New Whitelist Application",
-      color: 0x90ff5f,
-      fields: [
-        { name: "Discord", value: application.discord, inline: true },
-        { name: "Character Name", value: application.displayName, inline: true },
-        { name: "Age", value: application.characterAge, inline: true },
-        { name: "Playstyle", value: application.playstyle, inline: true },
-        { name: "Concept", value: application.concept.substring(0, 1024) }
-      ],
-      footer: { text: `SinCity | ${application.id}` },
-      timestamp: new Date().toISOString()
-    }]
-  };
-
+app.get("/api/bootstrap", (req, res) => {
   try {
-    const url = new URL(DISCORD_WEBHOOK_URL);
-    const req = https.request({
-      hostname: url.hostname,
-      path: url.pathname + url.search,
-      method: "POST",
-      headers: { "Content-Type": "application/json" }
-    });
-    req.write(JSON.stringify(payload));
-    req.end();
-  } catch (error) {
-    console.error("Discord Webhook failed:", error.message);
-  }
-}
-
-const server = http.createServer(async (request, response) => {
-  const url = new URL(request.url, `http://${request.headers.host}`);
-  const pathname = url.pathname;
-
-  try {
-    if (request.method === "GET" && pathname === "/api/bootstrap") {
-      sendJson(response, 200, getPublicState());
-      return;
-    }
-
-    if (request.method === "GET" && pathname === "/api/live") {
-      response.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-        "Access-Control-Allow-Origin": "*"
-      });
-      response.write(`event: bootstrap\ndata: ${JSON.stringify(getPublicState())}\n\n`);
-      sseClients.add(response);
-      request.on("close", () => {
-        sseClients.delete(response);
-      });
-      return;
-    }
-
-    if (request.method === "POST" && pathname === "/api/applications") {
-      const payload = await parseBody(request);
-      const application = createApplication(payload);
-      const error = validateApplication(application);
-      if (error) {
-        sendJson(response, 400, { error });
-        return;
-      }
-      applications.unshift(application);
-      writeJson(APPLICATIONS_FILE, applications);
-      broadcast("applications", { applications: normalizeApplications(applications), pendingApplications: applications.filter((item) => item.status === "pending").length });
-      sendDiscordWebhook(application).catch(() => {});
-      sendJson(response, 201, { ok: true, application });
-      return;
-    }
-
-    if (pathname.startsWith("/api/admin")) {
-      if (!requireAdmin(request, response)) {
-        return;
-      }
-
-      if (request.method === "GET" && pathname === "/api/admin/content") {
-        sendJson(response, 200, content);
-        return;
-      }
-
-      if (request.method === "PUT" && pathname === "/api/admin/content") {
-        const payload = await parseBody(request);
-        content = payload;
-        writeJson(CONTENT_FILE, content);
-        broadcast("content", { incidents: content.incidents, bulletins: content.bulletins, gallery: content.gallery, quickLinks: content.quickLinks });
-        sendJson(response, 200, { ok: true });
-        return;
-      }
-
-      if (request.method === "GET" && pathname === "/api/admin/applications") {
-        sendJson(response, 200, normalizeApplications(applications));
-        return;
-      }
-
-      if (request.method === "PATCH" && pathname.startsWith("/api/admin/applications/")) {
-        const applicationId = pathname.split("/").pop();
-        const payload = await parseBody(request);
-        const application = applications.find((item) => item.id === applicationId);
-        if (!application) {
-          sendJson(response, 404, { error: "Application not found." });
-          return;
-        }
-        application.status = String(payload.status || application.status);
-        application.updatedAt = new Date().toISOString();
-        writeJson(APPLICATIONS_FILE, applications);
-        broadcast("applications", { applications: normalizeApplications(applications), pendingApplications: applications.filter((item) => item.status === "pending").length });
-        sendJson(response, 200, { ok: true, application });
-        return;
-      }
-
-      if (request.method === "DELETE" && pathname.startsWith("/api/admin/applications/")) {
-        const applicationId = pathname.split("/").pop();
-        const nextApplications = applications.filter((item) => item.id !== applicationId);
-        if (nextApplications.length === applications.length) {
-          sendJson(response, 404, { error: "Application not found." });
-          return;
-        }
-        applications = nextApplications;
-        writeJson(APPLICATIONS_FILE, applications);
-        broadcast("applications", { applications: normalizeApplications(applications), pendingApplications: applications.filter((item) => item.status === "pending").length });
-        sendJson(response, 200, { ok: true });
-        return;
-      }
-
-      if (request.method === "GET" && pathname === "/api/admin/runtime") {
-        sendJson(response, 200, runtime);
-        return;
-      }
-
-      if (request.method === "PUT" && pathname === "/api/admin/runtime") {
-        const payload = await parseBody(request);
-        updateRuntimeFromInput(payload);
-        broadcast("runtime", getPublicState().runtime);
-        sendJson(response, 200, { ok: true, runtime });
-        return;
-      }
-
-      if (request.method === "POST" && pathname === "/api/admin/incidents") {
-        const payload = await parseBody(request);
-        const incident = injectIncident(payload);
-        sendJson(response, 201, { ok: true, incident });
-        return;
-      }
-
-      if (request.method === "GET" && pathname === "/api/admin/export") {
-        sendJson(response, 200, { content, runtime, applications: normalizeApplications(applications) });
-        return;
-      }
-
-      if (request.method === "POST" && pathname === "/api/admin/import") {
-        const payload = await parseBody(request);
-        applySnapshot(payload);
-        broadcast("content", {
-          incidents: content.incidents,
-          bulletins: content.bulletins,
-          gallery: content.gallery,
-          quickLinks: content.quickLinks
-        });
-        broadcast("runtime", getPublicState().runtime);
-        broadcast("applications", {
-          applications: normalizeApplications(applications),
-          pendingApplications: applications.filter((item) => item.status === "pending").length
-        });
-        sendJson(response, 200, { ok: true });
-        return;
-      }
-    }
-
-    routeStatic(pathname, response);
-  } catch (error) {
-    sendJson(response, 500, { error: error.message || "Server error" });
-  }
+    res.json({ content, runtime: { ...runtime, applicationCount: applications.length } });
+  } catch (err) { res.status(500).json({ error: "Data sync failed" }); }
 });
 
-setInterval(mutateRuntime, 8000);
-
-server.listen(PORT, () => {
-  console.log(`SinCity server running on http://localhost:${PORT}`);
-  if (REQUIRE_ADMIN_KEY) {
-    console.log(`Admin key protection enabled. Key: ${ADMIN_KEY}`);
-  } else {
-    console.log("Admin key protection disabled. Local mode is open.");
-  }
+app.post("/api/applications", (req, res) => {
+  if (!req.isAuthenticated()) return res.status(401).json({ error: "Authorized session required" });
+  try {
+    const newApp = { id: `app-${Date.now()}`, ...req.body, userId: req.user._id, status: "pending", createdAt: new Date().toISOString() };
+    applications.unshift(newApp);
+    writeJson(APPLICATIONS_FILE, applications);
+    res.status(201).json({ ok: true, application: newApp });
+  } catch (err) { res.status(500).json({ error: "Failed to save application" }); }
 });
+
+// Static assets
+app.use('/uploads', express.static(path.join(ROOT, 'uploads')));
+app.use(express.static(ROOT));
+
+app.listen(PORT, () => console.log(`--- SinCity Mainframe Active: http://localhost:${PORT} ---`));

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entry Portal | SinCity</title>
+  <link rel="icon" href="assets/emblem-hero.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem; }
+    .auth-card { background: var(--panel-strong); border: 1px solid var(--line); border-radius: var(--radius); padding: 3rem; max-width: 450px; width: 100%; text-align: center; box-shadow: var(--shadow); position: relative; overflow: hidden; backdrop-filter: blur(10px); }
+    .auth-card::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, transparent, var(--glow), transparent); }
+    .auth-title { font-family: var(--headline); font-size: 2.5rem; margin-bottom: 0.5rem; letter-spacing: -1px; }
+    .auth-subtitle { color: var(--muted); margin-bottom: 2rem; font-size: 0.9rem; }
+    
+    .form-group { margin-bottom: 1.2rem; text-align: left; }
+    .form-label { display: block; font-size: 0.7rem; color: var(--glow); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem; }
+    .form-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--line-soft); border-radius: 8px; padding: 0.8rem; color: white; outline: none; transition: border-color 0.3s; }
+    .form-input:focus { border-color: var(--glow); }
+    
+    .divider { margin: 2rem 0; position: relative; display: flex; align-items: center; color: var(--muted); font-size: 0.8rem; }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line-soft); }
+    .divider span { padding: 0 1rem; }
+
+    .btn-submit { width: 100%; padding: 1rem; border-radius: 8px; border: none; background: var(--glow); color: black; font-weight: bold; cursor: pointer; font-family: var(--display); transition: transform 0.2s; margin-top: 1rem; }
+    .btn-submit:hover { transform: scale(1.02); }
+
+    .social-btn { display: flex; align-items: center; justify-content: center; gap: 0.8rem; width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--line-soft); background: rgba(255,255,255,0.05); color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.8rem; transition: background 0.3s; }
+    .social-btn:hover { background: rgba(255,255,255,0.1); }
+    
+    .toggle-link { margin-top: 1.5rem; font-size: 0.85rem; color: var(--muted); }
+    .toggle-link span { color: var(--glow); cursor: pointer; font-weight: 600; }
+    
+    .error-box { background: rgba(255, 95, 95, 0.1); color: #ff5f5f; border: 1px solid #ff5f5f; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem; display: none; font-size: 0.85rem; }
+  </style>
+</head>
+<body data-page="auth">
+  <div class="page-shell">
+    <div class="ambient-backdrop"></div>
+    <div class="ambient-grid"></div>
+    <div class="scanlines"></div>
+
+    <div class="auth-container">
+      <div class="auth-card reveal visible">
+        <h1 class="auth-title" id="portal-title">LOGIN</h1>
+        <p class="auth-subtitle" id="portal-subtitle">Access the SinCity central mainframe.</p>
+
+        <div id="error-message" class="error-box"></div>
+
+        <!-- Local Form -->
+        <form id="auth-form">
+          <div id="name-group" class="form-group" style="display: none;">
+            <label class="form-label">Citizen Name</label>
+            <input type="text" id="display-name" class="form-input" placeholder="Desired name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Digital Address</label>
+            <input type="email" id="email" class="form-input" placeholder="email@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+            <a href="/forgot-password" style="display: block; margin-top: 0.5rem; font-size: 0.75rem; color: var(--muted); text-decoration: none; text-align: right;">Forgot Password?</a>          </div>
+          <button type="submit" class="btn-submit" id="submit-btn">Authorize Entry</button>
+        </form>
+
+        <div class="divider"><span>OR CONTINUE WITH</span></div>
+
+        <!-- Social Buttons -->
+        <a href="/auth/google" class="social-btn">
+          <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="20" alt=""> Google
+        </a>
+        <a href="/auth/discord" class="social-btn" style="border-color: #5865F255;">
+          <img src="https://cdn.prod.website-files.com/6257adef93867e3d0394e36a/6257d0f751ce370591001cc0_discord-icon.svg" width="20" alt=""> Discord
+        </a>
+
+        <div class="toggle-link" id="toggle-container">
+          Don't have a profile? <span onclick="toggleMode()">Register now</span>
+        </div>
+        
+        <a href="/" class="back-home" style="display: block; margin-top: 1.5rem; color: var(--muted); text-decoration: none; font-size: 0.8rem;">← Back to home</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let isLogin = true;
+
+    function toggleMode() {
+      isLogin = !isLogin;
+      document.getElementById('portal-title').textContent = isLogin ? 'LOGIN' : 'REGISTER';
+      document.getElementById('portal-subtitle').textContent = isLogin ? 'Access the SinCity central mainframe.' : 'Create your citizen record today.';
+      document.getElementById('name-group').style.display = isLogin ? 'none' : 'block';
+      document.getElementById('submit-btn').textContent = isLogin ? 'Authorize Entry' : 'Create Profile';
+      document.getElementById('toggle-container').innerHTML = isLogin ? 
+        "Don't have a profile? <span onclick='toggleMode()'>Register now</span>" : 
+        "Already registered? <span onclick='toggleMode()'>Login here</span>";
+    }
+
+    document.getElementById('auth-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorBox = document.getElementById('error-message');
+      errorBox.style.display = 'none';
+
+      const payload = {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      };
+      if (!isLogin) payload.displayName = document.getElementById('display-name').value;
+
+      const endpoint = isLogin ? '/auth/login' : '/auth/signup';
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          window.location.href = '/profile';
+        } else {
+          errorBox.textContent = data.error || 'Authentication failed';
+          errorBox.style.display = 'block';
+        }
+      } catch (err) {
+        errorBox.textContent = 'Connection error. Mainframe unreachable.';
+        errorBox.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

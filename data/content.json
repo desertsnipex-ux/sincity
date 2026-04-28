@@ -9,11 +9,43 @@
     "quickPitch": "The skyline is humming, the imports are polished, and somebody definitely just filed paperwork for a nightclub they should not be trusted with."
   },
   "navigation": [
-    { "id": "pulse", "label": "Server Pulse" },
-    { "id": "districts", "label": "Districts" },
-    { "id": "gallery", "label": "Gallery" },
+    { "id": "rules", "label": "Rules" },
+    { "id": "team", "label": "Team" },
     { "id": "apply", "label": "Whitelist" },
     { "id": "store", "label": "Store" }
+  ],
+  "rules": [
+    {
+      "category": "General Conduct",
+      "items": [
+        { "title": "Respect", "description": "Respect all players and staff members. OOC toxicity is strictly prohibited." },
+        { "title": "Microphone", "description": "A working, clear microphone is required at all times while in the city." },
+        { "title": "Age Requirement", "description": "Players must be 18 years or older to participate in SinCity RP." }
+      ]
+    },
+    {
+      "category": "Roleplay Standards",
+      "items": [
+        { "title": "Fail RP", "description": "Always stay in character. Actions that break immersion or realism are not allowed." },
+        { "title": "Value Your Life", "description": "You must value your life as you would in the real world. Avoid reckless behavior." },
+        { "title": "Metagaming", "description": "Using OOC information for IC advantage is strictly forbidden." },
+        { "title": "Powergaming", "description": "Forcing actions on others without giving them a chance to roleplay is prohibited." }
+      ]
+    },
+    {
+      "category": "Conflict & Crime",
+      "items": [
+        { "title": "RDM / VDM", "description": "Random Deathmatch and Vehicle Deathmatch are strictly prohibited." },
+        { "title": "Combat Logging", "description": "Leaving the server during an active RP scene is a bannable offense." },
+        { "title": "New Life Rule", "description": "If you are 'killed', you forget the events leading up to your death." }
+      ]
+    }
+  ],
+  "team": [
+    { "name": "Enact", "role": "Project Lead", "bio": "The architect behind the SinCity vision and core systems.", "image": "assets/emblem-hero.png" },
+    { "name": "Viper", "role": "Head of Development", "bio": "Turning complex ideas into smooth, high-performance city mechanics.", "image": "assets/emblem-hero.png" },
+    { "name": "Nova", "role": "Community Director", "bio": "Ensuring the city remains a vibrant and healthy place for all storytellers.", "image": "assets/emblem-hero.png" },
+    { "name": "Jax", "role": "Staff Lead", "bio": "Managing the boots on the ground to keep the RP standards high.", "image": "assets/emblem-hero.png" }
   ],
   "sceneOptions": [
     "The skyline is humming, the imports are polished, and somebody definitely just filed paperwork for a nightclub they should not be trusted with.",
@@ -228,6 +260,7 @@
       "id": "bronze",
       "name": "Bronze",
       "label": "Bronze Supporter",
+      "icon": "⚡",
       "price": 500,
       "queue": "Level 1",
       "imports": 0,
@@ -236,12 +269,13 @@
       "skip": "Fair",
       "accent": "#c88a4d",
       "description": "Queue assistance, a clean cosmetic boost, and enough server vanity to start feeling mildly important.",
-      "perks": ["Level 1 queue priority", "Custom license plate", "Exclusive Discord flair"]
+      "perks": ["🚀 Level 1 queue priority", "💳 Custom license plate", "✨ Exclusive Discord flair"]
     },
     {
       "id": "gold",
       "name": "Gold",
       "label": "Gold Supporter",
+      "icon": "🔥",
       "price": 1500,
       "queue": "Level 3",
       "imports": 1,
@@ -250,12 +284,13 @@
       "skip": "Strong",
       "accent": "#e8ff97",
       "description": "A big step up for regulars who want faster access, louder status, and better import leverage.",
-      "perks": ["Level 3 queue priority", "One import discount token", "Faction event priority"]
+      "perks": ["🚀 Level 3 queue priority", "🏎️ One import discount token", "📅 Faction event priority"]
     },
     {
       "id": "platinum",
       "name": "Platinum",
       "label": "Platinum Supporter",
+      "icon": "👑",
       "price": 1800,
       "queue": "Level 4",
       "imports": 2,
@@ -264,7 +299,7 @@
       "skip": "Aggressive",
       "accent": "#d4e1e8",
       "description": "The flashy lane for players who hate queues and enjoy seeing their name show up in all the right places.",
-      "perks": ["Level 4 queue priority", "Priority vehicle import review", "Expanded property styling options"]
+      "perks": ["🚀 Level 4 queue priority", "📋 Priority vehicle import review", "🏠 Expanded property styling options"]
     }
   ],
   "faq": [

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citizen Dossier | SinCity</title>
+  <link rel="icon" href="assets/emblem-hero.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .dossier-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    .id-card {
+      position: sticky;
+      top: 100px;
+      padding: 2rem;
+      text-align: center;
+      border-radius: var(--radius);
+      border: 1px solid var(--glow);
+      background: linear-gradient(145deg, var(--panel-strong), var(--bg-deep));
+      box-shadow: 0 0 30px rgba(146, 255, 110, 0.1);
+    }
+    .id-avatar {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 4px solid var(--glow);
+      margin-bottom: 1.5rem;
+      object-fit: cover;
+      filter: grayscale(0.5) contrast(1.2);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 1rem;
+      border-radius: 20px;
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      background: var(--glow);
+      color: #000;
+      margin-bottom: 1rem;
+    }
+    .dossier-header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 1rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .dossier-id-number {
+      font-family: 'Courier New', Courier, monospace;
+      color: var(--glow);
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+    .data-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .data-field {
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid var(--line);
+      border-radius: 4px;
+    }
+    .field-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .field-value {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .linked-mark {
+      color: var(--glow);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 900px) {
+      .dossier-layout { grid-template-columns: 1fr; }
+      .id-card { position: static; }
+    }
+  </style>
+</head>
+<body data-page="profile">
+  <div class="page-shell">
+    <div class="ambient-backdrop"></div>
+    <div class="ambient-grid"></div>
+    <div class="scanlines"></div>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html">
+          <div class="brand-mark"><img src="assets/emblem-hero.png" alt="SinCity"></div>
+          <div class="brand-copy">
+            <div class="brand-name">SinCity</div>
+            <div class="brand-tag">Central Intelligence</div>
+          </div>
+        </a>
+        <nav class="nav-links" id="nav-links"></nav>
+        <div class="header-actions"></div>
+      </div>
+    </header>
+
+    <main class="section">
+      <div class="section-frame">
+        <div class="dossier-header">
+          <div>
+            <div class="section-kicker">Citizen Dossier</div>
+            <h1 class="hero-title" style="margin: 0; font-size: 3rem;">OFFICIAL RECORD</h1>
+          </div>
+          <div class="dossier-id-number">REF_ID: <span id="ref-id">SYNCING...</span></div>
+        </div>
+
+        <div class="dossier-layout">
+          <!-- Side ID Card -->
+          <aside>
+            <div class="id-card reveal visible">
+              <div class="status-badge">ACTIVE CITIZEN</div>
+              <div style="position: relative; display: inline-block;">
+                <img id="profile-avatar" src="assets/emblem-hero.png" alt="Subject Avatar" class="id-avatar" style="cursor: pointer;" onclick="document.getElementById('avatar-upload').click()">
+                <div style="position: absolute; bottom: 25px; right: 10px; background: var(--glow); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: black; border: 2px solid var(--bg-deep); pointer-events: none;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4V1H5V4H8V6H5V9H3V6H0V4H3ZM6 10V7H9V4H13L15 6H20C21.1 6 22 6.9 22 8V18C22 19.1 21.1 20 20 20H6C4.9 20 4 19.1 4 18V10H6ZM13 18C15.21 18 17 16.21 17 14C17 11.79 15.21 10 13 10C10.79 10 9 11.79 9 14C9 16.21 10.79 18 13 18ZM13 12C14.1 12 15 12.9 15 14C15 15.1 14.1 16 13 16C11.9 16 11 15.1 11 14C11 12.9 11.9 12 13 12Z"/></svg>
+                </div>
+                <input type="file" id="avatar-upload" class="hidden" accept="image/*" onchange="uploadAvatar(this)">
+              </div>
+              <h2 id="profile-name" class="tactical-text" style="margin: 0;">Loading...</h2>
+              <p id="profile-role-sub" style="color: var(--muted); font-size: 0.8rem; margin-top: 0.5rem;">SINCITY RESIDENT</p>
+              
+              <div style="margin-top: 2rem; border-top: 1px solid var(--line-soft); padding-top: 1.5rem; text-align: left;">
+                <div class="field-label">Clearance Level</div>
+                <div id="clearance-level" style="font-family: var(--display); font-weight: 700; color: var(--glow);">LEVEL 01</div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Data Grid -->
+          <div class="dossier-content">
+            <div id="view-mode">
+              <div class="data-row">
+                <div class="data-field reveal visible">
+                  <span class="field-label">Legal Name</span>
+                  <span id="field-full-name" class="field-value">---</span>
+                </div>
+                <div class="data-field reveal visible">
+                  <span class="field-label">Digital Address</span>
+                  <span id="field-email" class="field-value">---</span>
+                </div>
+              </div>
+
+              <div class="data-row">
+                <div class="data-field reveal visible">
+                  <span class="field-label">City Standing</span>
+                  <span class="field-value" style="color: #90ff5f;">CLEAN RECORD</span>
+                </div>
+                <div class="data-field reveal visible">
+                  <span class="field-label">Account Created</span>
+                  <span id="field-created-at" class="field-value">---</span>
+                </div>
+              </div>
+
+              <div class="data-field reveal visible" style="margin-bottom: 1.5rem; border-left-color: var(--glow);">
+                <span class="field-label">Citizen Bio</span>
+                <span id="field-bio" class="field-value" style="font-size: 0.9rem; font-family: var(--body); opacity: 0.8; white-space: pre-wrap;">No bio data established.</span>
+              </div>
+
+              <button onclick="toggleEdit(true)" class="secondary-button" style="margin-bottom: 2rem;">Modify Dossier Data</button>
+            </div>
+
+            <div id="edit-mode" class="hidden">
+              <div class="panel reveal visible" style="margin-bottom: 2rem; border-color: var(--glow);">
+                <div class="panel-title">Data Modification <small>Edit profile</small></div>
+                <form id="edit-form" style="margin-top: 1.5rem;">
+                  <div class="form-group" style="margin-bottom: 1.2rem;">
+                    <label class="field-label">Citizen Name</label>
+                    <input type="text" id="edit-name" class="form-input" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--line-soft); border-radius: 8px; padding: 0.8rem; color: white;">
+                  </div>
+                  <div class="form-group" style="margin-bottom: 1.2rem;">
+                    <label class="field-label">Citizen Bio</label>
+                    <textarea id="edit-bio" class="form-input" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--line-soft); border-radius: 8px; padding: 0.8rem; color: white; min-height: 100px; font-family: var(--body);"></textarea>
+                  </div>
+                  <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="primary-button">Commit Changes</button>
+                    <button type="button" onclick="toggleEdit(false)" class="ghost-button">Abort</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <article class="panel reveal visible" style="margin-top: 1rem;">
+              <div class="panel-title">Secure Links <small>Encrypted connectivity</small></div>
+              <div style="margin-top: 1.5rem;">
+                <div id="discord-linked-ui" class="hidden">
+                  <div class="linked-mark">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    Discord Identity Verified
+                  </div>
+                  <div class="radio-box" style="margin-top: 1rem; background: rgba(88, 101, 242, 0.1); border-color: #5865F2;">
+                    <div class="radio-label" style="color: #5865F2;">DISCORD_ID</div>
+                    <div class="radio-text" id="discord-id-val" style="font-family: monospace;">---</div>
+                  </div>
+                </div>
+
+                <div id="discord-unlinked-ui">
+                  <p class="section-description">Link your Discord identity to receive secure transmissions regarding your whitelist applications.</p>
+                  <a href="/auth/discord/link" class="primary-button" style="background: #5865F2; width: 100%; justify-content: center; margin-top: 1rem;">
+                    Establish Secure Handshake
+                  </a>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel reveal visible" style="margin-top: 2rem; border-color: rgba(255, 95, 95, 0.3);">
+              <div class="panel-title" style="color: #ff5f5f;">System Log <small>Activity history</small></div>
+              <div class="stack-list">
+                <div class="news-item">
+                  <div class="news-topline"><span>Login successful</span><small>RECENT</small></div>
+                  <div class="news-meta">Verified via secure OAuth provider.</div>
+                </div>
+                <div class="news-item">
+                  <div class="news-topline"><span>Whitelist ready</span><small>STATUS</small></div>
+                  <div class="news-meta">Subject is authorized to submit entry request.</div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    function toggleEdit(editing) {
+      document.getElementById('view-mode').classList.toggle('hidden', editing);
+      document.getElementById('edit-mode').classList.toggle('hidden', !editing);
+      if (editing && currentUser) {
+        document.getElementById('edit-name').value = currentUser.displayName;
+        document.getElementById('edit-bio').value = currentUser.bio || "";
+      }
+    }
+
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        displayName: document.getElementById('edit-name').value,
+        bio: document.getElementById('edit-bio').value
+      };
+
+      try {
+        const res = await fetch('/api/me', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.ok) {
+          currentUser = data.user;
+          renderData();
+          toggleEdit(false);
+          alert('Dossier updated successfully.');
+        }
+      } catch (err) {
+        alert('Failed to update dossier.');
+      }
+    });
+
+    function renderData() {
+      if (!currentUser) return;
+      document.getElementById('profile-name').textContent = currentUser.displayName;
+      document.getElementById('field-full-name').textContent = currentUser.displayName;
+      document.getElementById('field-email').textContent = currentUser.email || 'ENCRYPTED';
+      document.getElementById('profile-avatar').src = currentUser.avatar || 'assets/emblem-hero.png';
+      document.getElementById('ref-id').textContent = currentUser._id.substring(0, 12).toUpperCase();
+      document.getElementById('field-created-at').textContent = new Date(currentUser.createdAt).toLocaleDateString();
+      document.getElementById('field-bio').textContent = currentUser.bio || "No bio data established.";
+      
+      if (currentUser.role === 'admin') {
+        document.getElementById('clearance-level').textContent = 'LEVEL 05 [ADMIN]';
+        document.getElementById('clearance-level').style.color = '#ff5f5f';
+        document.getElementById('profile-role-sub').textContent = 'CITY ARCHITECT';
+      }
+
+      if (currentUser.discordId) {
+        document.getElementById('discord-linked-ui').classList.remove('hidden');
+        document.getElementById('discord-unlinked-ui').classList.add('hidden');
+        document.getElementById('discord-id-val').textContent = currentUser.discordId;
+      }
+    }
+
+    async function uploadAvatar(input) {
+      if (!input.files || !input.files[0]) return;
+      
+      const formData = new FormData();
+      formData.append('avatar', input.files[0]);
+
+      try {
+        const res = await fetch('/api/me/avatar', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.ok) {
+          currentUser.avatar = data.avatar;
+          renderData();
+          alert('Avatar uploaded successfully.');
+        } else {
+          alert(data.error || 'Upload failed.');
+        }
+      } catch (err) {
+        alert('Connection error during upload.');
+      }
+    }
+
+    // Reuse global navigation logic
+    async function renderNav() {
+      const res = await fetch('/api/bootstrap');
+      const data = await res.json();
+      const nav = document.getElementById('nav-links');
+      if (!nav) return;
+      
+      const links = [
+        { label: 'Home', href: 'index.html#home' },
+        { label: 'Pulse', href: 'index.html#pulse' },
+        { label: 'Districts', href: 'apply.html#districts' },
+        { label: 'Apply', href: 'apply.html#apply' },
+        { label: 'Rules', href: 'rules.html' },
+        { label: 'Team', href: 'team.html' },
+        { label: 'Store', href: 'store.html' }
+      ];
+
+      nav.innerHTML = links.map(l => `<a href="${l.href}" class="nav-link">${l.label}</a>`).join('');
+    }
+
+    async function loadDossier() {
+      renderNav();
+      try {
+        const res = await fetch('/api/me');
+        const data = await res.json();
+        
+        if (!data.authenticated) {
+          window.location.href = '/login';
+          return;
+        }
+
+        currentUser = data.user;
+        renderData();
+
+        // Render header actions (Logout button)
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) {
+          headerActions.innerHTML = `<a href="/auth/logout" class="ghost-button">Terminate Session</a>`;
+        }
+
+      } catch (err) {
+        console.error('Failed to load dossier', err);
+      }
+    }
+    loadDossier();
+  </script>
+</body>
+</html>

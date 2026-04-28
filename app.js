@@ -9,9 +9,11 @@ const LOCAL_KEYS = {
 const LOCAL_CHANNEL_NAME = "sincity-local-channel";
 const PAGE_ROUTES = {
   home: "index.html#home",
-  pulse: "pulse.html#pulse",
-  districts: "world.html#districts",
-  gallery: "world.html#gallery",
+  rules: "rules.html#rules",
+  team: "team.html#team",
+  pulse: "index.html#pulse",
+  districts: "apply.html#districts",
+  gallery: "index.html#gallery",
   apply: "apply.html#apply",
   store: "store.html#store",
   faq: "index.html#faq"
@@ -74,6 +76,8 @@ const refs = {
   quickLinks: document.getElementById("quick-links"),
   rhythmList: document.getElementById("rhythm-list"),
   cityZones: document.getElementById("city-zones"),
+  rulesList: document.getElementById("rules-list"),
+  teamGrid: document.getElementById("team-grid"),
   galleryGrid: document.getElementById("gallery-grid"),
   tierGrid: document.getElementById("tier-grid"),
   faqList: document.getElementById("faq-list"),
@@ -114,8 +118,7 @@ const refs = {
   closeLightbox: document.getElementById("close-lightbox"),
   prevGallery: document.getElementById("prev-gallery"),
   nextGallery: document.getElementById("next-gallery"),
-  themeToggle: document.getElementById("theme-toggle"),
-  themeIcon: document.getElementById("theme-icon")
+  headerActions: document.querySelector(".header-actions")
 };
 
 function showToast(title, message) {
@@ -204,7 +207,18 @@ async function loadLocalBootstrap() {
     loadSeedJson("data/content.json"),
     loadSeedJson("data/runtime.json")
   ]);
-  const content = readLocalJson(LOCAL_KEYS.content, seedContent);
+  const storedContent = readLocalJson(LOCAL_KEYS.content, {});
+  
+  // Merge: Use seed for navigation/rules/team if they changed, keep others
+  const content = { 
+    ...seedContent, 
+    ...storedContent,
+    navigation: seedContent.navigation, // Force new navigation
+    rules: storedContent.rules || seedContent.rules,
+    team: storedContent.team || seedContent.team,
+    tiers: seedContent.tiers // Force new tiers for icons
+  };
+  
   const runtime = readLocalJson(LOCAL_KEYS.runtime, seedRuntime);
   const applications = readLocalJson(LOCAL_KEYS.applications, []);
   return {
@@ -314,12 +328,14 @@ function updateClocks() {
 }
 
 function renderNav() {
-  if (!refs.navLinks) {
+  if (!refs.navLinks || !state.content || !state.content.navigation) {
     return;
   }
   refs.navLinks.innerHTML = "";
   const pageForSection = {
     home: "home",
+    rules: "rules",
+    team: "team",
     pulse: "pulse",
     districts: "world",
     gallery: "world",
@@ -356,7 +372,7 @@ function renderHero() {
   if (refs.heroDescription) refs.heroDescription.textContent = site.heroDescription;
   if (refs.sceneCopy) refs.sceneCopy.textContent = site.quickPitch;
 
-  if (refs.heroMetrics) {
+  if (refs.heroMetrics && metrics) {
     refs.heroMetrics.innerHTML = "";
     metrics.forEach((metric) => {
       const article = document.createElement("article");
@@ -369,7 +385,7 @@ function renderHero() {
 }
 
 function renderIncidents() {
-  if (!refs.eventList) {
+  if (!refs.eventList || !state.content || !state.content.incidents) {
     return;
   }
   refs.eventList.innerHTML = "";
@@ -390,10 +406,11 @@ function renderIncidents() {
 }
 
 function renderBulletins() {
-  if (!refs.bulletinTabs || !refs.newsList) {
+  if (!refs.bulletinTabs || !refs.newsList || !state.content || !state.content.bulletins) {
     return;
   }
   const current = state.content.bulletins.find((item) => item.id === state.activeBulletin) || state.content.bulletins[0];
+  if (!current) return;
   state.activeBulletin = current.id;
 
   refs.bulletinTabs.innerHTML = "";
@@ -434,7 +451,7 @@ function renderBulletins() {
 }
 
 function renderQuickLinks() {
-  if (refs.quickLinks) {
+  if (refs.quickLinks && state.content && state.content.quickLinks) {
     refs.quickLinks.innerHTML = "";
     state.content.quickLinks.forEach((link) => {
       const button = document.createElement("button");
@@ -448,7 +465,7 @@ function renderQuickLinks() {
     });
   }
 
-  if (refs.rhythmList) {
+  if (refs.rhythmList && state.content && state.content.rhythmCards) {
     refs.rhythmList.innerHTML = "";
     state.content.rhythmCards.forEach((card) => {
       const badgeTone = card.badge.includes("Serious") ? "severity-medium" : "severity-low";
@@ -470,6 +487,63 @@ function renderZones() {
     card.className = "zone-card reveal";
     card.innerHTML = `<div><div class="zone-icon">${zone.icon}</div><h3 class="zone-title">${zone.title}</h3><p class="zone-copy">${zone.description}</p></div><div class="zone-meter"><div class="meter-row"><span>${zone.meterLabel}</span><span>${zone.meterValue}%</span></div><div class="meter-bar"><div class="meter-fill" style="width:${zone.meterValue}%"></div></div></div>`;
     refs.cityZones.appendChild(card);
+  });
+  observeReveals();
+}
+
+function renderRules() {
+  if (!refs.rulesList || !state.content.rules) {
+    return;
+  }
+  refs.rulesList.innerHTML = "";
+  state.content.rules.forEach((group) => {
+    const section = document.createElement("div");
+    section.className = "section-band reveal";
+    section.innerHTML = `
+      <div class="section-heading">
+        <h2 class="section-title" style="font-size: 1.8rem;">${group.category}</h2>
+      </div>
+      <div class="faq-list">
+        ${group.items.map((rule) => `
+          <article class="faq-card">
+            <button class="faq-button" type="button">
+              <span class="faq-question">${rule.title}</span>
+              <span>+</span>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-answer-inner">${rule.description}</div>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    `;
+    section.querySelectorAll(".faq-button").forEach((btn) => {
+      btn.addEventListener("click", () => btn.closest(".faq-card").classList.toggle("open"));
+    });
+    refs.rulesList.appendChild(section);
+  });
+  observeReveals();
+}
+
+function renderTeam() {
+  if (!refs.teamGrid || !state.content.team) {
+    return;
+  }
+  refs.teamGrid.innerHTML = "";
+  state.content.team.forEach((member) => {
+    const card = document.createElement("article");
+    card.className = "zone-card reveal";
+    card.innerHTML = `
+      <div>
+        <div class="brand-mark" style="margin-bottom: 1rem; width: 80px; height: 80px;">
+          <img src="${member.image}" alt="${member.name}">
+        </div>
+        <h3 class="zone-title">${member.name}</h3>
+        <div class="section-kicker" style="font-size: 0.8rem; margin-bottom: 0.5rem;">${member.role}</div>
+        <p class="zone-copy">${member.bio}</p>
+      </div>
+    `;
+    refs.teamGrid.appendChild(card);
   });
   observeReveals();
 }
@@ -498,7 +572,19 @@ function renderStore() {
   state.content.tiers.forEach((tier) => {
     const card = document.createElement("article");
     card.className = `tier-card reveal${tier.id === state.selectedTier ? " selected" : ""}`;
-    card.innerHTML = `<div class="mini-chip" style="width:max-content;color:${tier.accent};border-color:${tier.accent}55;">${tier.label}</div><h3 class="tier-name">${tier.name}</h3><div class="tier-price" style="color:${tier.accent};">${tier.price} CC</div><div class="tier-description">${tier.description}</div><div class="perk-list">${tier.perks.map((perk) => `<div class="perk-item">${perk}</div>`).join("")}</div><button class="secondary-button tier-action" type="button">Select ${tier.name}</button>`;
+    card.innerHTML = `
+      <div class="mini-chip" style="width:max-content;color:${tier.accent};border-color:${tier.accent}55;">${tier.label}</div>
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 2rem;">${tier.icon || ""}</span>
+        <h3 class="tier-name">${tier.name}</h3>
+      </div>
+      <div class="tier-price" style="color:${tier.accent};">${tier.price} CC</div>
+      <div class="tier-description">${tier.description}</div>
+      <div class="perk-list">
+        ${tier.perks.map((perk) => `<div class="perk-item">${perk}</div>`).join("")}
+      </div>
+      <button class="secondary-button tier-action" type="button">Select ${tier.name}</button>
+    `;
     card.addEventListener("click", () => {
       state.selectedTier = tier.id;
       renderStore();
@@ -708,6 +794,21 @@ function createApplication(payload) {
 
 async function submitApplication(event) {
   event.preventDefault();
+
+  // AUTH GATE: If not logged in, show the overlay and stop
+  if (!state.user) {
+    document.getElementById("auth-gate")?.classList.remove("hidden");
+    showToast("Login Required", "Please sign in to save your application progress.");
+    return;
+  }
+
+  // DISCORD GATE: Must have discordId to apply
+  if (!state.user.discordId) {
+    showToast("Discord Required", "You must link your Discord in your Profile before applying.");
+    window.location.href = "/profile";
+    return;
+  }
+
   if (state.currentStep < state.content.applicationSteps.length - 1) {
     if (!validateCurrentStep()) {
       return;
@@ -891,26 +992,6 @@ function rotateScene() {
   showToast("City vibe updated", "The hero panel just cycled to a new SinCity mood.");
 }
 
-function toggleTheme() {
-  const themes = ["neon", "pd", "ems"];
-  const currentIndex = themes.indexOf(state.theme);
-  const nextIndex = (currentIndex + 1) % themes.length;
-  state.theme = themes[nextIndex];
-
-  document.body.classList.remove("theme-pd", "theme-ems");
-  if (state.theme !== "neon") {
-    document.body.classList.add(`theme-${state.theme}`);
-  }
-
-  if (refs.themeIcon) {
-    const icons = { neon: "N", pd: "P", ems: "E" };
-    refs.themeIcon.textContent = icons[state.theme];
-  }
-
-  const labels = { neon: "Neon Noir", pd: "Police Dept", ems: "Emergency Medical" };
-  showToast("Atmosphere shifted", `City visual profile set to ${labels[state.theme]}.`);
-}
-
 function hydrateContent(payload, options = {}) {
   const preserveSelections = Boolean(options.preserveSelections);
   const previousBulletin = state.activeBulletin;
@@ -930,6 +1011,8 @@ function hydrateContent(payload, options = {}) {
   renderBulletins();
   renderQuickLinks();
   renderZones();
+  renderRules();
+  renderTeam();
   renderGallery();
   renderStore();
   renderTierSummary();
@@ -1025,7 +1108,6 @@ async function bootstrap() {
 
 function attachEvents() {
   refs.randomizeScene?.addEventListener("click", rotateScene);
-  refs.themeToggle?.addEventListener("click", toggleTheme);
 
   refs.prevStep?.addEventListener("click", () => {
     state.currentStep = Math.max(0, state.currentStep - 1);
@@ -1064,14 +1146,64 @@ function attachEvents() {
   });
 }
 
+async function checkAuth() {
+  if (state.mode === "local") {
+    renderAuthStatus();
+    return;
+  }
+  try {
+    const data = await fetchJson("/api/me");
+    if (data.authenticated) {
+      state.user = data.user;
+    }
+  } catch (err) {
+    console.log("Not authenticated");
+  }
+  renderAuthStatus(); // Always call this to show either Profile or Join button
+}
+
+function renderAuthStatus() {
+  if (!refs.headerActions) return;
+  refs.headerActions.innerHTML = "";
+
+  if (state.user) {
+    // Logged In: Show Profile
+    const link = document.createElement("a");
+    link.className = "header-profile-link";
+    link.href = "/profile";
+    link.innerHTML = `
+      <img src="${state.user.avatar || 'assets/emblem-hero.png'}" alt="" class="header-avatar">
+      <span id="user-name-header" class="tactical-text">${state.user.displayName}</span>
+    `;
+    refs.headerActions.appendChild(link);
+  } else {
+    // Logged Out: Show Join Button
+    const btn = document.createElement("a");
+    btn.className = "primary-button";
+    btn.href = "/login";
+    btn.textContent = "Join the City";
+    refs.headerActions.appendChild(btn);
+  }
+}
+
+function hideLoader() {
+  const loader = document.getElementById("site-loader");
+  if (loader) {
+    loader.classList.add("hidden");
+    setTimeout(() => loader.remove(), 800);
+  }
+}
+
 async function init() {
   const payload = await bootstrap();
   hydrateContent(payload);
+  await checkAuth();
   loadDraft();
   renderForm();
   updatePreview();
   initParticles();
   attachEvents();
+  hideLoader();
 
   if (state.mode === "api") {
     attachApiLiveStream();

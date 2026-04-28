@@ -8,6 +8,11 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body data-page="home">
+  <div id="site-loader" class="pro-loader">
+    <div class="loader-glitch">SinCity</div>
+    <div class="loader-status">SYNCING CITIZEN DATA...</div>
+  </div>
+
   <div class="page-shell">
     <div class="ambient-backdrop"></div>
     <div class="ambient-grid"></div>
@@ -28,16 +33,7 @@
 
         <nav class="nav-links" id="nav-links" aria-label="Primary"></nav>
 
-        <div class="header-actions">
-          <button class="ghost-button icon-button" id="theme-toggle" type="button" title="Toggle theme">
-            <span id="theme-icon">N</span>
-          </button>
-          <div class="status-pill">
-            <span class="pulse-dot"></span>
-            <span><strong id="header-online">0</strong> online now</span>
-          </div>
-          <a class="primary-button" href="apply.html#apply">Join the City</a>
-        </div>
+        <div class="header-actions"></div>
       </div>
     </header>
 
@@ -45,15 +41,14 @@
       <section class="hero section" id="home">
         <div class="hero-layout">
           <div class="hero-copy reveal">
-            <div class="eyebrow">
+            <div class="eyebrow glass-panel" style="padding: 0.5rem 1rem; border-radius: 30px; width: fit-content;">
               <span class="pulse-dot"></span>
-              <span id="hero-eyebrow"></span>
+              <span id="hero-eyebrow" class="tactical-text" style="font-size: 0.7rem;"></span>
             </div>
-            <h1 class="hero-title glitch-text"><span id="hero-title-main"></span><span id="hero-title-accent"></span></h1>
-            <p class="hero-description" id="hero-description"></p>
+            <h1 class="hero-title glitch-text" style="font-size: 5rem; line-height: 0.9;"><span id="hero-title-main"></span><br><span id="hero-title-accent" style="color: var(--glow); font-size: 4rem;"></span></h1>
+            <p class="hero-description" id="hero-description" style="font-size: 1.2rem; max-width: 600px; line-height: 1.6; opacity: 0.8;"></p>
             <div class="hero-actions">
               <a class="primary-button" href="apply.html#apply">Start your whitelist</a>
-              <a class="secondary-button" href="pulse.html#pulse">See live server pulse</a>
               <button class="ghost-button" type="button" id="randomize-scene">Shuffle city vibe</button>
             </div>
             <div class="hero-metrics" id="hero-metrics"></div>
@@ -61,13 +56,13 @@
 
           <aside class="hero-stage reveal">
             <div class="hero-card-stack">
-              <div class="hero-panel">
-                <div class="hero-card-title">City preview</div>
+              <div class="hero-panel glass-panel">
+                <div class="hero-card-title tactical-text" style="font-size: 0.7rem; color: var(--glow);">Telemetry Stream</div>
                 <div class="status-grid">
                   <div class="status-tile">
-                    <div class="status-name">Server status</div>
-                    <div class="status-value">Online</div>
-                    <div class="status-subvalue">Restarts in <span id="restart-countdown">00:00:00</span></div>
+                    <div class="status-name">System status</div>
+                    <div class="status-value" style="color: var(--glow); text-shadow: 0 0 10px var(--glow);">Online</div>
+                    <div class="status-subvalue">Cycle: <span id="restart-countdown">00:00:00</span></div>
                   </div>
                   <div class="status-tile">
                     <div class="status-name">Server time</div>
@@ -96,38 +91,91 @@
         </div>
       </section>
 
-      <section class="section section-band">
+      <section class="section section-band" id="pulse">
         <div class="section-frame">
           <div class="section-heading reveal">
             <div>
-              <div class="section-kicker">Jump In</div>
-              <h2 class="section-title">The site is finally split like a real product</h2>
+              <h2 class="section-title">What the city feels like right now</h2>
             </div>
             <p class="section-description">
-              Browse the server pulse, world overview, whitelist flow, and supporter store as separate pages instead of one giant scroll wall.
+              Live telemetry, incident rotation, bulletin switching, and quick links.
             </p>
           </div>
+          <div class="dashboard-grid">
+            <article class="panel glass-panel reveal">
+              <div class="panel-title tactical-text">Operations feed <small>live telemetry</small></div>
+              <div class="scanner-header">
+                <div class="mini-chip">
+                  <span class="pulse-dot"></span>
+                  <span class="label">ACTIVE DISPATCHER</span>
+                </div>
+                <div class="mini-chip">
+                  <span class="label" id="radio-status">LIVE TRAFFIC</span>
+                </div>
+              </div>
+              <div class="radio-box">
+                <div class="radio-label">Radio Frequency 422.5</div>
+                <div class="radio-text" id="radio-scanner">Scanning for active units...</div>
+              </div>
+              <div class="chip-row">
+                <div class="data-chip">
+                  <div class="label">Players online</div>
+                  <div class="value" id="online-count">0/0</div>
+                </div>
+                <div class="data-chip">
+                  <div class="label">Queue length</div>
+                  <div class="value" id="queue-count">0</div>
+                </div>
+              </div>
+              <div class="chip-row">
+                <div class="data-chip">
+                  <div class="label">Gang heat</div>
+                  <div class="value" id="heat-level">Moderate</div>
+                </div>
+                <div class="data-chip">
+                  <div class="label">Economy drift</div>
+                  <div class="value" id="economy-shift">0.0%</div>
+                </div>
+              </div>
+              <div class="panel-title">Incident reel <small>content-managed</small></div>
+              <div class="stack-list" id="event-list"></div>
+            </article>
 
-          <div class="tier-grid">
-            <article class="panel reveal route-card">
-              <div class="panel-title">Server pulse <small>live telemetry</small></div>
-              <p class="section-description compact-copy">Operations feed, bulletin switching, quick links, and the current city rhythm.</p>
-              <a class="secondary-button" href="pulse.html#pulse">Open pulse</a>
-            </article>
-            <article class="panel reveal route-card">
-              <div class="panel-title">World guide <small>districts and gallery</small></div>
-              <p class="section-description compact-copy">Roleplay lanes, visual identity, and a cleaner showcase of the SinCity look.</p>
-              <a class="secondary-button" href="world.html#districts">Open world</a>
-            </article>
-            <article class="panel reveal route-card">
-              <div class="panel-title">Whitelist and store <small>action pages</small></div>
-              <p class="section-description compact-copy">Apply without leaving the site, then compare supporter tiers on a dedicated page.</p>
-              <div class="inline-actions">
-                <a class="secondary-button" href="apply.html#apply">Apply</a>
-                <a class="ghost-button" href="store.html#store">Store</a>
+            <article class="panel glass-panel reveal">
+              <div class="panel-title">City bulletin <small>switch channels</small></div>
+              <div class="bulletin-stage">
+                <div class="bulletin-tabs" id="bulletin-tabs"></div>
+                <div class="bulletin-display">
+                  <h3 class="bulletin-title" id="bulletin-title"></h3>
+                  <div class="bulletin-summary" id="bulletin-summary"></div>
+                  <div class="bulletin-points" id="bulletin-points"></div>
+                </div>
+                <div class="stack-list" id="news-list"></div>
               </div>
             </article>
+
+            <article class="panel glass-panel reveal">
+              <div class="panel-title">Quick links <small>editable content</small></div>
+              <div class="stack-list" id="quick-links"></div>
+              <div class="panel-title">Current rhythm <small>tonight in one glance</small></div>
+              <div class="stack-list" id="rhythm-list"></div>
+            </article>
           </div>
+        </div>
+      </section>
+
+      <section class="section section-band" id="gallery">
+        <div class="section-frame">
+          <div class="section-heading reveal">
+            <div>
+              <div class="section-kicker">Gallery</div>
+              <h2 class="section-title">A cleaner showcase for the SinCity look</h2>
+            </div>
+            <p class="section-description">
+              Gallery items come from the content JSON and can be changed from the admin panel.
+            </p>
+          </div>
+          <div class="gallery-grid" id="gallery-grid"></div>
         </div>
       </section>
 
@@ -155,6 +203,29 @@
     </footer>
 
     <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+      <div class="lightbox-shell" role="dialog" aria-modal="true" aria-labelledby="lightbox-title">
+        <div class="lightbox-visual">
+          <img id="lightbox-image" src="" alt="">
+        </div>
+        <div class="lightbox-copy">
+          <div class="lightbox-header">
+            <div>
+              <p class="section-kicker zero-space">Gallery item</p>
+              <h3 class="lightbox-title" id="lightbox-title"></h3>
+            </div>
+            <button class="ghost-button" type="button" id="close-lightbox">Close</button>
+          </div>
+          <p class="lightbox-description" id="lightbox-description"></p>
+          <div class="lightbox-footer">
+            <button class="secondary-button" type="button" id="prev-gallery">Previous</button>
+            <div id="lightbox-counter">1 / 1</div>
+            <button class="secondary-button" type="button" id="next-gallery">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="app.js" defer></script>
