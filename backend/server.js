@@ -127,8 +127,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || "sincity-ultra-secret-key-2026",
   resave: false,
   saveUninitialized: false,
+  name: 'sincity.sid',
   cookie: { 
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 
   }
 }));
@@ -430,7 +433,14 @@ app.get("/auth/discord/link", (req, res, next) => {
 });
 
 app.get("/auth/logout", (req, res) => {
-  req.logout(() => res.redirect("/"));
+  req.logout((err) => {
+    if (err) return res.status(500).json({ error: "Logout failed" });
+    req.session.destroy((err) => {
+      if (err) return res.status(500).json({ error: "Session destruction failed" });
+      res.clearCookie('sincity.sid');
+      res.redirect("/");
+    });
+  });
 });
 
 // --- PAGE ROUTES ---
