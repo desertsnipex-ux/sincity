@@ -183,7 +183,7 @@ if (process.env.GOOGLE_CLIENT_ID) {
         const email = profile.emails[0].value;
         user = await User.findOne({ email });
         if (user) { user.googleId = profile.id; await user.save(); }
-        else { user = await User.create({ googleId: profile.id, email, displayName: profile.displayName, avatar: profile.photos[0].value }); }
+        else { user = await User.create({ googleId: profile.id, email, displayName: profile.displayName, avatar: profile.photos[0].value, emailVerified: true }); }
       }
       return done(null, user);
     } catch (err) { return done(err); }
