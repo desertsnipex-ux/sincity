@@ -47,11 +47,21 @@
 
         <div id="error-message" class="error-box"></div>
 
+        <!-- Social Buttons (Primary) -->
+        <div style="margin-bottom: 2rem;">
+          <a href="/auth/discord" class="social-btn" style="background: #5865F2; border: none; box-shadow: 0 0 20px rgba(88, 101, 242, 0.4); padding: 1.2rem; font-size: 1rem;">
+            <img src="https://cdn.prod.website-files.com/6257adef93867e3d0394e36a/6257d0f751ce370591001cc0_discord-icon.svg" width="22" alt=""> Continue with Discord
+          </a>
+          <p style="font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; text-align: center;">Recommended for automated whitelisting and role sync.</p>
+        </div>
+
+        <div class="divider"><span>OR USE CITIZEN RECORD</span></div>
+
         <!-- Local Form -->
         <form id="auth-form">
           <div id="name-group" class="form-group" style="display: none;">
-            <label class="form-label">Citizen Name</label>
-            <input type="text" id="display-name" class="form-input" placeholder="Desired name">
+            <label class="form-label">Username</label>
+            <input type="text" id="display-name" class="form-input" placeholder="Choose a username">
           </div>
           <div class="form-group">
             <label class="form-label">Digital Address</label>
@@ -61,18 +71,14 @@
             <label class="form-label">Password</label>
             <input type="password" id="password" class="form-input" placeholder="••••••••" required>
             <a href="/forgot-password" style="display: block; margin-top: 0.5rem; font-size: 0.75rem; color: var(--muted); text-decoration: none; text-align: right;">Forgot Password?</a>          </div>
-          <button type="submit" class="btn-submit" id="submit-btn">Authorize Entry</button>
+          <button type="submit" class="btn-submit" id="submit-btn" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--line-soft);">Authorize Entry</button>
         </form>
 
-        <div class="divider"><span>OR CONTINUE WITH</span></div>
-
-        <!-- Social Buttons -->
-        <a href="/auth/google" class="social-btn">
-          <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="20" alt=""> Google
-        </a>
-        <a href="/auth/discord" class="social-btn" style="border-color: #5865F255;">
-          <img src="https://cdn.prod.website-files.com/6257adef93867e3d0394e36a/6257d0f751ce370591001cc0_discord-icon.svg" width="20" alt=""> Discord
-        </a>
+        <div style="margin-top: 2rem;">
+          <a href="/auth/google" class="social-btn" style="background: transparent; border: 1px solid var(--line-soft); font-size: 0.85rem;">
+            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="18" alt=""> Google Sign-in
+          </a>
+        </div>
 
         <div class="toggle-link" id="toggle-container">
           Don't have a profile? <span onclick="toggleMode()">Register now</span>
@@ -100,7 +106,12 @@
     document.getElementById('auth-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const errorBox = document.getElementById('error-message');
+      const submitBtn = document.getElementById('submit-btn');
+      
       errorBox.style.display = 'none';
+      errorBox.style.background = 'rgba(255, 95, 95, 0.1)';
+      errorBox.style.color = '#ff5f5f';
+      errorBox.style.borderColor = '#ff5f5f';
 
       const payload = {
         email: document.getElementById('email').value,
@@ -111,6 +122,9 @@
       const endpoint = isLogin ? '/auth/login' : '/auth/signup';
 
       try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'CONNECTING...';
+
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -123,12 +137,18 @@
         } else {
           errorBox.textContent = data.error || 'Authentication failed';
           errorBox.style.display = 'block';
+          submitBtn.textContent = isLogin ? 'Authorize Entry' : 'Create Profile';
+          submitBtn.disabled = false;
         }
       } catch (err) {
         errorBox.textContent = 'Connection error. Mainframe unreachable.';
         errorBox.style.display = 'block';
+        submitBtn.textContent = isLogin ? 'Authorize Entry' : 'Create Profile';
+        submitBtn.disabled = false;
       }
     });
+
+    // Removed verification logic for easier login flow
   </script>
 </body>
 </html>

@@ -98,6 +98,93 @@ body.theme-pd {
   --shadow: 0 0 0 1px rgba(105, 180, 255, 0.2), 0 0 18px rgba(71, 160, 255, 0.16), inset 0 0 24px rgba(58, 100, 145, 0.08);
 }
 
+.auth-card {margin-left: 0.50rem;}
+.error-box {
+  background: rgba(255, 95, 95, 0.1);
+  color: #ff5f5f;
+  border: 1px solid #ff5f5f;
+  padding: 0.8rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Auth Popup Animations */
+@keyframes slideGradient {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Enhanced form input styles */
+.form-input:focus {
+  border-color: var(--glow);
+  box-shadow: 0 0 0 2px rgba(142, 255, 105, 0.2);
+  background: rgba(255,255,255,0.12);
+}
+
+.form-input:hover {
+  border-color: var(--line);
+  background: rgba(255,255,255,0.1);
+}
+
+/* Enhanced button styles */
+.primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(142, 255, 105, 0.4);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+}
+
+.social-button:hover {
+  transform: translateY(-2px) !important;
+}
+
+.btn-google:hover {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+}
+
+.btn-discord:hover {
+  box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4) !important;
+}
+
+/* Enhanced toggle link */
+.toggle-link:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--line);
+  transform: translateY(-1px);
+}
+
+.toggle-link span:hover {
+  text-shadow: 0 0 8px rgba(142, 255, 105, 0.8);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line-soft);
+}
+
 body.theme-ems {
   --bg: #130606;
   --bg-deep: #080202;

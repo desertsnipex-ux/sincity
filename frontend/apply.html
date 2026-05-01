@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SinCity Whitelist</title>
+  <link rel="icon" href="assets/emblem-hero.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="apply">
+  <div class="page-shell">
+    <div class="ambient-backdrop"></div>
+    <div class="ambient-grid"></div>
+    <canvas id="particle-field"></canvas>
+    <div class="scanlines"></div>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html#home" aria-label="SinCity home">
+          <div class="brand-mark">
+            <img src="assets/emblem-hero.png" alt="SinCity emblem">
+          </div>
+          <div class="brand-copy">
+            <div class="brand-name" id="brand-name">SinCity</div>
+            <div class="brand-tag" id="brand-tag">By Enact</div>
+          </div>
+        </a>
+        <nav class="nav-links" id="nav-links" aria-label="Primary"></nav>
+        <div class="header-actions"></div>
+      </div>
+    </header>
+
+    <main class="subpage-main">
+      <section class="section section-band subpage-intro">
+        <div class="section-frame">
+          <div class="section-heading reveal">
+            <div>
+              <div class="section-kicker">Whitelist</div>
+              <h1 class="section-title">Apply without leaving the site</h1>
+            </div>
+            <p class="section-description">
+              The whitelist flow lives on its own page now, which makes it easier to complete, easier to review, and a lot less cramped.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-band" id="districts">
+        <div class="section-frame">
+          <div class="section-heading reveal">
+            <div>
+              <div class="section-kicker">Districts</div>
+              <h2 class="section-title">Choose what kind of trouble you want</h2>
+            </div>
+            <p class="section-description">
+              Different roleplay lanes render from editable content, so the site can evolve with the city instead of freezing in one version.
+            </p>
+          </div>
+          <div class="city-zones" id="city-zones"></div>
+        </div>
+      </section>
+
+      <section class="section section-band" id="apply">
+        <div class="section-frame">
+          <div class="application-layout">
+            <div class="reveal">
+              <div class="stepper" id="stepper"></div>
+              <form class="form-card" id="application-form" novalidate>
+                <div class="panel-title">Application details <small id="step-label">Step 1 of 4</small></div>
+                <div class="field-grid" id="form-fields"></div>
+                <div class="draft-note" id="draft-note">Draft saves automatically in this browser. Final applications save locally on this machine.</div>
+                <div class="form-footer">
+                  <button class="ghost-button" type="button" id="prev-step">Previous</button>
+                  <div class="inline-actions">
+                    <button class="secondary-button" type="button" id="clear-draft">Clear draft</button>
+                    <button class="primary-button" type="submit" id="next-step">Next step</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <aside class="insight-card reveal">
+              <div class="panel-title">Applicant preview <small>updates as they type</small></div>
+              <div class="insight-row">
+                <div>
+                  <strong>Citizen</strong>
+                  <span id="preview-name">Unregistered</span>
+                </div>
+                <span id="preview-age">Age not set</span>
+              </div>
+              <div class="insight-row">
+                <div>
+                  <strong>Character concept</strong>
+                  <p id="preview-concept">No concept written yet. The right side of the page mirrors what the application currently says.</p>
+                </div>
+              </div>
+              <div class="insight-row">
+                <div>
+                  <strong>Playstyle</strong>
+                  <span id="preview-style">No selected roleplay lane</span>
+                </div>
+                <span id="preview-hours">Hours unknown</span>
+              </div>
+              <div class="insight-row">
+                <div>
+                  <strong>Readiness</strong>
+                  <span id="preview-ready">Rules pending</span>
+                </div>
+                <span id="preview-voice">Voice check pending</span>
+              </div>
+              <div class="insight-row">
+                <div>
+                  <strong>Queue status</strong>
+                  <span><span id="pending-count">0</span> pending applications</span>
+                </div>
+                              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div>SinCity by Enact. Dynamic local build with API-backed content, live stats, and application storage.</div>
+              </div>
+    </footer>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Professional Auth Gate Overlay -->
+  <div id="auth-gate" class="pro-loader hidden" style="background: rgba(3, 8, 5, 0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 1rem; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; display: flex; align-items: center; justify-content: center;">
+    <div class="auth-card reveal visible" style="max-width: 440px; max-height: 90vh; border: 2px solid var(--glow); box-shadow: 0 0 30px rgba(142, 255, 105, 0.4), inset 0 0 15px rgba(142, 255, 105, 0.1); position: relative; overflow-y: auto; padding: 2rem; margin: 0 auto; scrollbar-width: none; -ms-overflow-style: none;">
+      <style>
+        .auth-card::-webkit-scrollbar { display: none; }
+      </style>
+      <!-- Animated Background Gradient -->
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--glow), transparent); animation: slideGradient 3s ease-in-out infinite;"></div>
+      
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 2rem; position: relative; z-index: 2;">
+        <div style="width: 50px; height: 50px; margin: 0 auto 1rem; background: var(--glow); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(142, 255, 105, 0.5);">
+          <div style="width: 30px; height: 30px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; color: var(--glow);">SC</div>
+        </div>
+        <h2 class="tactical-text" id="auth-title" style="color: var(--glow); margin-bottom: 0.5rem; font-size: 1.6rem; text-shadow: 0 0 10px rgba(142, 255, 105, 0.5);">Authentication Required</h2>
+        <p class="section-description" id="auth-subtitle" style="font-size: 0.9rem; margin-bottom: 0; color: var(--muted); line-height: 1.5;">To submit a whitelist application and receive automated Discord roles, you must enter the portal.</p>
+      </div>
+      
+      <div id="auth-error" class="error-box" style="display: none; margin-bottom: 1.5rem; animation: shake 0.5s ease-in-out;"></div>
+
+      <!-- Social Auth Buttons (Primary) -->
+      <div class="auth-buttons" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+        <a href="/auth/discord" class="social-button btn-discord" style="background: #5865F2; color: white; padding: 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.75rem; transition: all 0.3s ease; box-shadow: 0 0 20px rgba(88, 101, 242, 0.4); font-size: 1.1rem;">
+          <img src="https://cdn.prod.website-files.com/6257adef93867e3d0394e36a/6257d0f751ce370591001cc0_discord-icon.svg" width="24" alt=""> Continue with Discord
+        </a>
+        <p style="font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: -0.5rem;">Recommended for automated role assignment.</p>
+      </div>
+
+      <div class="divider" style="margin: 2rem 0; position: relative; display: flex; align-items: center; color: var(--muted); font-size: 0.85rem;">
+        <span style="padding: 0 1.5rem; background: var(--panel-strong); position: relative; z-index: 1; font-weight: 500;">OR USE CITIZEN RECORD</span>
+      </div>
+
+      <!-- Local Auth Form -->
+      <form id="local-auth-form" style="margin-bottom: 1.5rem;">
+        <div id="name-group" class="form-group" style="display: none; margin-bottom: 1.5rem;">
+          <label class="form-label" style="display: block; font-size: 0.75rem; color: var(--glow); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.75rem; font-weight: 600;">Username</label>
+          <input type="text" id="display-name" class="form-input" placeholder="Choose a username" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--line-soft); border-radius: 8px; padding: 0.8rem; color: white;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="display: block; font-size: 0.75rem; color: var(--glow); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.75rem; font-weight: 600;">Digital Address</label>
+          <input type="email" id="auth-email" class="form-input" placeholder="email@example.com" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--line-soft); border-radius: 8px; padding: 0.8rem; color: white;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="display: block; font-size: 0.75rem; color: var(--glow); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.75rem; font-weight: 600;">Password</label>
+          <input type="password" id="auth-password" class="form-input" placeholder="••••••••" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--line-soft); border-radius: 8px; padding: 0.8rem; color: white;">
+        </div>
+        
+        <button type="submit" class="primary-button" id="auth-submit-btn" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.05); border-color: var(--line-soft); color: white;">
+          Authorize Entry
+        </button>
+      </form>
+
+      <div style="margin-bottom: 1.5rem; text-align: center;">
+        <a href="/auth/google" class="social-button" style="color: var(--muted); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+          <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="16" alt=""> Google Sign-in
+        </a>
+      </div>
+
+      <div class="toggle-link" id="auth-toggle" style="margin-top: 1rem; font-size: 0.9rem; color: var(--muted); text-align: center; padding: 0.8rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--line-soft); transition: all 0.3s ease;">
+        <div id="toggle-text"></div>Don't have a profile? <span onclick="toggleAuthMode()" style="color: var(--glow); cursor: pointer; font-weight: 600; transition: all 0.3s ease; text-shadow: 0 0 5px rgba(142, 255, 105, 0.5);">Register now</span></div>
+        <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--line-soft);">
+          <button class="ghost-button" onclick="document.getElementById('auth-gate').classList.add('hidden')" style="font-size: 0.85rem; opacity: 0.7; transition: all 0.3s ease; padding: 0.4rem 1rem; background: none; border: none; color: var(--muted); cursor: pointer;">Continue Browsing</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

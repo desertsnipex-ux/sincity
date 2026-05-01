@@ -3,12 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "description": "Dynamic SinCity GTA RP website with local admin and JSON API.",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
+    "discord.js": "^14.26.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",

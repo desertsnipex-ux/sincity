@@ -11,8 +11,6 @@ const PAGE_ROUTES = {
   home: "index.html#home",
   rules: "rules.html#rules",
   team: "team.html#team",
-  pulse: "index.html#pulse",
-  districts: "apply.html#districts",
   gallery: "index.html#gallery",
   apply: "apply.html#apply",
   store: "store.html#store",
@@ -336,8 +334,6 @@ function renderNav() {
     home: "home",
     rules: "rules",
     team: "team",
-    pulse: "pulse",
-    districts: "world",
     gallery: "world",
     apply: "apply",
     store: "store",
@@ -357,6 +353,15 @@ function renderNav() {
     link.textContent = item.label;
     refs.navLinks.appendChild(link);
   });
+
+  // Add Admin Panel link for admins and mods
+  if (state.user && (state.user.role === 'admin' || state.user.role === 'mod')) {
+    const adminLink = document.createElement("a");
+    adminLink.className = "nav-link";
+    adminLink.href = "admin-panel.html";
+    adminLink.textContent = "Admin Panel";
+    refs.navLinks.appendChild(adminLink);
+  }
 }
 
 function renderHero() {
@@ -729,26 +734,98 @@ function updatePreview() {
   refs.previewVoice.textContent = state.formState.voice === "Yes" ? "Mic ready" : "Voice check pending";
 }
 
+let saveTimeout = null;
 function saveDraft() {
-  writeLocalJson(LOCAL_KEYS.draft, state.formState);
+  // Always save to local storage for immediate recovery
+  writeLocalJson(LOCAL_KEYS.draft, {
+    formState: state.formState,
+    currentStep: state.currentStep
+  });
+  
   if (refs.draftNote) {
-    refs.draftNote.textContent = "Draft saved automatically in this browser. Final applications save locally on this machine.";
+    refs.draftNote.textContent = "Draft saved locally.";
+  }
+
+  // If logged in, sync to cloud with debounce
+  if (state.user && state.mode === "api") {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(async () => {
+      try {
+        await fetch("/api/me/draft", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            formState: state.formState,
+            currentStep: state.currentStep
+          })
+        });
+        if (refs.draftNote) {
+          refs.draftNote.textContent = "Draft synced to your citizen record.";
+        }
+      } catch (err) {
+        console.error("Cloud save failed", err);
+      }
+    }, 1500); // Wait 1.5s after last change
   }
 }
 
-function loadDraft() {
+async function loadDraft() {
+  // 1. Try cloud draft first if logged in
+  if (state.user && state.mode === "api") {
+    try {
+      const res = await fetch("/api/me/draft");
+      const data = await res.json();
+      if (data.ok && data.draft) {
+        Object.assign(state.formState, data.draft.formState);
+        state.currentStep = data.draft.currentStep || 0;
+        if (refs.draftNote) refs.draftNote.textContent = "Recovered your cloud-synced draft.";
+        
+        // Auto-fill discord from profile if missing
+        if (state.user && state.user.discordId && !state.formState.discord) {
+          state.formState.discord = state.user.discordUsername || state.user.discordId;
+        }
+
+        renderForm();
+        updatePreview();
+        return;
+      }
+    } catch (err) {
+      console.error("Cloud load failed", err);
+    }
+  }
+
+  // 2. Fallback to local storage
   const stored = readLocalJson(LOCAL_KEYS.draft, null);
-  if (!stored) {
-    return;
+  if (stored) {
+    Object.assign(state.formState, stored.formState || stored);
+    state.currentStep = stored.currentStep || 0;
+    if (refs.draftNote) {
+      refs.draftNote.textContent = "Recovered your saved draft from this browser.";
+    }
   }
-  Object.assign(state.formState, stored);
-  if (refs.draftNote) {
-    refs.draftNote.textContent = "Recovered your saved draft from this browser.";
+
+  // Auto-fill discord from profile for fresh apps or local drafts
+  if (state.user && state.user.discordId && !state.formState.discord) {
+    state.formState.discord = state.user.discordUsername || state.user.discordId;
   }
+
+  renderForm();
+  updatePreview();
 }
 
-function clearDraftState() {
+async function clearDraftState() {
+  // Clear local
   localStorage.removeItem(LOCAL_KEYS.draft);
+  
+  // Clear cloud if logged in
+  if (state.user && state.mode === "api") {
+    try {
+      await fetch("/api/me/draft", { method: "DELETE" });
+    } catch (err) {
+      console.error("Cloud clear failed", err);
+    }
+  }
+
   Object.keys(state.formState).forEach((key) => {
     state.formState[key] = "";
   });
@@ -761,7 +838,7 @@ function clearDraftState() {
   if (refs.draftNote) {
     refs.draftNote.textContent = "Draft cleared. Fresh slate.";
   }
-  showToast("Draft cleared", "The local whitelist draft has been removed.");
+  showToast("Draft cleared", "The whitelist draft has been removed from all devices.");
 }
 
 function handleFieldChange(event) {
@@ -795,13 +872,7 @@ function createApplication(payload) {
 async function submitApplication(event) {
   event.preventDefault();
 
-  // AUTH GATE: If not logged in, show the overlay and stop
-  if (!state.user) {
-    document.getElementById("auth-gate")?.classList.remove("hidden");
-    showToast("Login Required", "Please sign in to save your application progress.");
-    return;
-  }
-
+  
   // DISCORD GATE: Must have discordId to apply
   if (!state.user.discordId) {
     showToast("Discord Required", "You must link your Discord in your Profile before applying.");
@@ -1194,19 +1265,192 @@ function hideLoader() {
   }
 }
 
+// Auth Gate Functions
+let isAuthLogin = true;
+
+function toggleAuthMode() {
+  isAuthLogin = !isAuthLogin;
+  const authTitle = document.getElementById('auth-title');
+  const authSubtitle = document.getElementById('auth-subtitle');
+  const nameGroup = document.getElementById('name-group');
+  const submitBtn = document.getElementById('auth-submit-btn');
+  const toggleText = document.getElementById('toggle-text');
+  const form = document.getElementById('local-auth-form');
+
+  // Add transition effect to the form
+  if (form) {
+    form.style.opacity = '0.7';
+    form.style.transform = 'scale(0.98)';
+  }
+
+  setTimeout(() => {
+    if (authTitle) authTitle.textContent = isAuthLogin ? 'Authentication Required' : 'Create Your Profile';
+    if (authSubtitle) authSubtitle.textContent = isAuthLogin ? 
+      'To submit a whitelist application and link your Discord ID for notifications, you must enter the portal.' : 
+      'Create your citizen record to join the SinCity whitelist queue.';
+    
+    if (nameGroup) {
+      if (isAuthLogin) {
+        nameGroup.style.display = 'none';
+      } else {
+        nameGroup.style.display = 'block';
+        nameGroup.style.opacity = '0';
+        nameGroup.style.animation = 'fadeInUp 0.4s ease forwards';
+      }
+    }
+    
+    if (submitBtn) submitBtn.textContent = isAuthLogin ? 'Login' : 'Create Profile';
+    if (toggleText) toggleText.innerHTML = isAuthLogin ? 
+      "Don't have a profile? <span onclick='toggleAuthMode()' style='color: var(--glow); cursor: pointer; font-weight: 600; transition: all 0.3s ease; text-shadow: 0 0 5px rgba(142, 255, 105, 0.5);'>Register now</span>" : 
+      "Already have a profile? <span onclick='toggleAuthMode()' style='color: var(--glow); cursor: pointer; font-weight: 600; transition: all 0.3s ease; text-shadow: 0 0 5px rgba(142, 255, 105, 0.5);'>Login here</span>";
+
+    // Restore form opacity
+    if (form) {
+      form.style.opacity = '1';
+      form.style.transform = 'scale(1)';
+    }
+  }, 150);
+}
+
+async function handleLocalAuth(event) {
+  event.preventDefault();
+  const errorBox = document.getElementById('auth-error');
+  if (errorBox) errorBox.style.display = 'none';
+
+  const email = document.getElementById('auth-email')?.value;
+  const password = document.getElementById('auth-password')?.value;
+  const displayName = document.getElementById('display-name')?.value;
+
+  if (!email || !password) {
+    if (errorBox) {
+      errorBox.textContent = 'Email and password are required';
+      errorBox.style.display = 'block';
+    }
+    return;
+  }
+
+  if (!isAuthLogin && !displayName) {
+    if (errorBox) {
+      errorBox.textContent = 'Username is required for registration';
+      errorBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const payload = { email, password };
+  if (!isAuthLogin) payload.displayName = displayName;
+
+  const endpoint = isAuthLogin ? '/auth/login' : '/auth/signup';
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    console.log('Login response:', data);
+
+    // Bypass any verification checks - simplified login
+    if (data.ok || data.requiresVerification) {
+      // Close the auth gate and refresh auth state
+      document.getElementById('auth-gate')?.classList.add('hidden');
+      await checkAuth();
+      showToast(isAuthLogin ? 'Login successful' : 'Registration successful', 'Welcome to SinCity!');
+    } else {
+      console.log('Login error:', data.error);
+      if (errorBox) {
+        errorBox.textContent = data.error || 'Authentication failed';
+        errorBox.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    if (errorBox) {
+      errorBox.textContent = 'Connection error. Mainframe unreachable.';
+      errorBox.style.display = 'block';
+    }
+  }
+}
+
+function showVerificationMessage(email) {
+  const authCard = document.querySelector('.auth-card');
+  if (authCard) {
+    authCard.innerHTML = `
+      <div style="text-align: center; margin-bottom: 2rem; position: relative; z-index: 2;">
+        <div style="width: 50px; height: 50px; margin: 0 auto 1rem; background: var(--glow); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(142, 255, 105, 0.5);">
+          <div style="width: 30px; height: 30px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; color: var(--glow);">✓</div>
+        </div>
+        <h2 class="tactical-text" style="color: var(--glow); margin-bottom: 0.5rem; font-size: 1.6rem; text-shadow: 0 0 10px rgba(142, 255, 105, 0.5);">Check Your Email</h2>
+        <p class="section-description" style="font-size: 0.9rem; margin-bottom: 0; color: var(--muted); line-height: 1.5;">We've sent a verification link to <strong>${email}</strong></p>
+      </div>
+      
+      <div style="background: rgba(142, 255, 105, 0.1); border: 1px solid var(--glow); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
+        <p style="color: var(--glow); margin-bottom: 1rem;">Please check your inbox and click the verification link to complete your registration.</p>
+        <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem;">The link will expire in 24 hours.</p>
+        <button onclick="resendVerification('${email}')" style="background: none; border: 1px solid var(--glow); color: var(--glow); padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease;">Resend Email</button>
+      </div>
+      
+      <button onclick="closeAuthGate()" style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.1); border: 1px solid var(--line-soft); color: white; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">Close</button>
+    `;
+  }
+}
+
+
+
+async function resendVerification(email) {
+  try {
+    const response = await fetch('/auth/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    
+    const data = await response.json();
+    
+    if (data.ok) {
+      showToast('Email Sent', 'Verification email has been resent!');
+    } else {
+      showToast('Error', data.error || 'Failed to resend email');
+    }
+  } catch (err) {
+    showToast('Error', 'Connection error. Please try again.');
+  }
+}
+
+function closeAuthGate() {
+  document.getElementById('auth-gate')?.classList.add('hidden');
+}
+
+// Initialize auth form listener
+function initAuthGate() {
+  const authForm = document.getElementById('local-auth-form');
+  if (authForm) {
+    authForm.addEventListener('submit', handleLocalAuth);
+  }
+}
+
 async function init() {
   const payload = await bootstrap();
   hydrateContent(payload);
   await checkAuth();
-  loadDraft();
+  await loadDraft();
   renderForm();
   updatePreview();
   initParticles();
   attachEvents();
+  initAuthGate(); // Initialize auth gate functionality
   hideLoader();
 
   if (state.mode === "api") {
     attachApiLiveStream();
+    
+    // Proactive Discord Handshake Check
+    if (state.user && !state.user.discordId) {
+      setTimeout(() => {
+        showToast("Handshake Required", "Link your Discord in your Dossier to enable automated whitelist status.");
+      }, 2000);
+    }
   } else {
     attachLocalSync();
     window.setInterval(mutateLocalRuntime, 8000);

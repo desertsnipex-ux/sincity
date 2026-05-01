@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel | SinCity</title>
+  <link rel="icon" href="assets/emblem-hero.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .admin-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .admin-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .admin-title {
+      font-size: 3.5rem;
+      color: var(--glow);
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 30px rgba(142, 255, 105, 0.5);
+      font-family: var(--display);
+    }
+
+    .admin-subtitle {
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+
+    .admin-badge {
+      display: inline-block;
+      background: var(--glow);
+      color: var(--bg);
+      padding: 0.5rem 1.5rem;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 2rem;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .admin-card {
+      background: linear-gradient(145deg, var(--panel-strong), var(--bg-deep));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .admin-card:hover {
+      border-color: var(--glow);
+      box-shadow: 0 0 40px rgba(142, 255, 105, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .admin-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--glow), transparent);
+      animation: scan 4s linear infinite;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--glow);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--bg);
+      font-size: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      color: var(--glow);
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .card-description {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .admin-button {
+      padding: 0.8rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .primary-button {
+      background: var(--glow);
+      color: var(--bg);
+    }
+
+    .primary-button:hover {
+      background: #7fff00;
+      box-shadow: 0 0 20px rgba(127, 255, 0, 0.5);
+    }
+
+    .secondary-button {
+      background: transparent;
+      color: var(--glow);
+      border: 1px solid var(--glow);
+    }
+
+    .secondary-button:hover {
+      background: rgba(142, 255, 105, 0.1);
+      box-shadow: 0 0 20px rgba(142, 255, 105, 0.3);
+    }
+
+    .danger-button {
+      background: transparent;
+      color: #ff5f5f;
+      border: 1px solid #ff5f5f;
+    }
+
+    .danger-button:hover {
+      background: rgba(255, 95, 95, 0.1);
+      box-shadow: 0 0 20px rgba(255, 95, 95, 0.3);
+    }
+
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--glow);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .action-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .user-management {
+      background: rgba(255, 95, 95, 0.05);
+      border: 1px solid rgba(255, 95, 95, 0.2);
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .user-search {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 0.8rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+    }
+
+    .search-button {
+      padding: 0.8rem 1.5rem;
+      background: var(--glow);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .user-list {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .user-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .user-item:last-child {
+      border-bottom: none;
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .mini-button {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .role-badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .role-admin {
+      background: var(--glow);
+      color: var(--bg);
+    }
+
+    .role-mod {
+      background: #ffc107;
+      color: var(--bg);
+      border: 1px solid #ffc107;
+    }
+
+    .role-user {
+      background: rgba(142, 255, 105, 0.2);
+      color: var(--glow);
+      border: 1px solid var(--glow);
+    }
+
+    @media (max-width: 768px) {
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-page="admin-panel">
+  <div class="page-shell">
+    <div class="ambient-backdrop"></div>
+    <div class="ambient-grid"></div>
+    <canvas id="particle-field"></canvas>
+    <div class="scanlines"></div>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html#home" aria-label="SinCity home">
+          <div class="brand-mark">
+            <img src="assets/emblem-hero.png" alt="SinCity emblem">
+          </div>
+          <div class="brand-copy">
+            <div class="brand-name" id="brand-name">SinCity</div>
+            <div class="brand-tag" id="brand-tag">By Enact</div>
+          </div>
+        </a>
+
+        <nav class="nav-links" id="nav-links" aria-label="Primary"></nav>
+
+        <div class="header-actions"></div>
+      </div>
+    </header>
+
+    <main class="section" style="display: flex; justify-content: center; align-items: flex-start; padding: 2rem 0;">
+      <div class="section-frame">
+        <div class="admin-container">
+          <div class="admin-header">
+            <div class="admin-badge">ADMINISTRATOR ACCESS</div>
+            <h1 class="admin-title">SYSTEM CONTROL PANEL</h1>
+            <p class="admin-subtitle">Complete administrative control over SinCity systems</p>
+          </div>
+
+          <div class="stats-overview">
+            <div class="stat-item">
+              <div class="stat-value" id="total-users">0</div>
+              <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="pending-applications">0</div>
+              <div class="stat-label">Pending Apps</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="approved-applications">0</div>
+              <div class="stat-label">Approved Apps</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="server-status">ONLINE</div>
+              <div class="stat-label">Server Status</div>
+            </div>
+          </div>
+
+          <div class="admin-grid">
+            <div class="admin-card">
+              <div class="card-header">
+                <div class="card-icon">👥</div>
+                <h2 class="card-title">Application Management</h2>
+              </div>
+              <div class="card-description">
+                Review and manage whitelist applications with automated Discord notifications
+              </div>
+              <div class="card-actions">
+                <a href="staff-review.html" class="admin-button primary-button">Review Applications</a>
+                <button onclick="refreshApplications()" class="admin-button secondary-button">Refresh Data</button>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div class="card-header">
+                <div class="card-icon">👤</div>
+                <h2 class="card-title">User Management</h2>
+              </div>
+              <div class="card-description">
+                Manage user accounts, roles, and permissions
+              </div>
+              <div class="card-actions">
+                <button onclick="showUserManagement()" class="admin-button primary-button">Manage Users</button>
+                <button onclick="showRoleManagement()" class="admin-button secondary-button">Role Settings</button>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div class="card-header">
+                <div class="card-icon">⚙️</div>
+                <h2 class="card-title">System Configuration</h2>
+              </div>
+              <div class="card-description">
+                Configure server settings, Discord webhooks, and system parameters
+              </div>
+              <div class="card-actions">
+                <button onclick="showSystemSettings()" class="admin-button primary-button">System Settings</button>
+                <button onclick="showLogs()" class="admin-button secondary-button">View Logs</button>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div class="card-header">
+                <div class="card-icon">📊</div>
+                <h2 class="card-title">Analytics & Reports</h2>
+              </div>
+              <div class="card-description">
+                View detailed statistics, user activity, and system performance metrics
+              </div>
+              <div class="card-actions">
+                <button onclick="showAnalytics()" class="admin-button primary-button">View Analytics</button>
+                <button onclick="exportData()" class="admin-button secondary-button">Export Data</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="user-management" id="user-management" style="display: none;">
+            <h3 style="color: var(--glow); margin-bottom: 1.5rem;">User Management</h3>
+            <div class="user-search">
+              <input type="text" class="search-input" id="user-search" placeholder="Search users by email or username...">
+              <button class="search-button" onclick="searchUsers()">Search</button>
+            </div>
+            <div class="user-list" id="user-list">
+              <div style="text-align: center; padding: 2rem; color: var(--muted);">
+                Loading users...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let users = [];
+    let applications = [];
+
+    // Check admin access
+    async function checkAdminAccess() {
+      try {
+        const res = await fetch('/api/me');
+        const data = await res.json();
+        
+        if (!data.authenticated || (data.user.role !== 'admin' && data.user.role !== 'mod')) {
+          window.location.href = '/login';
+          return false;
+        }
+        
+        return data.user;
+      } catch (err) {
+        console.error('Admin check failed:', err);
+        window.location.href = '/login';
+        return false;
+      }
+    }
+
+    // Load admin data
+    async function loadAdminData() {
+      try {
+        // Load users
+        const usersRes = await fetch('/api/admin/users');
+        const usersData = await usersRes.json();
+        if (usersData.ok) {
+          users = usersData.users;
+        }
+
+        // Load applications
+        const appsRes = await fetch('/api/applications');
+        const appsData = await appsRes.json();
+        console.log('Applications API response:', appsData);
+        if (appsData.ok) {
+          applications = appsData.applications;
+          console.log('Applications loaded:', applications.length);
+          console.log('Pending applications:', applications.filter(app => app.status === 'pending').length);
+        } else {
+          console.error('Applications API error:', appsData.error);
+        }
+
+        updateStats();
+      } catch (err) {
+        console.error('Error loading admin data:', err);
+      }
+    }
+
+    // Update statistics
+    function updateStats() {
+      document.getElementById('total-users').textContent = users.length;
+      document.getElementById('pending-applications').textContent = applications.filter(app => app.status === 'pending').length;
+      document.getElementById('approved-applications').textContent = applications.filter(app => app.status === 'approved').length;
+    }
+
+    // User Management Functions
+    function showUserManagement() {
+      document.getElementById('user-management').style.display = 'block';
+      loadUsers();
+    }
+
+    async function loadUsers() {
+      const userList = document.getElementById('user-list');
+      userList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--muted);">Loading users...</div>';
+
+      try {
+        const res = await fetch('/api/admin/users');
+        const data = await res.json();
+        
+        if (data.ok && data.users.length > 0) {
+          userList.innerHTML = data.users.map(user => `
+            <div class="user-item">
+              <div class="user-info">
+                <div><strong>${user.displayName}</strong> (${user.email})</div>
+                <div style="font-size: 0.8rem; color: var(--muted);">Joined: ${new Date(user.createdAt).toLocaleDateString()}</div>
+              </div>
+              <div class="user-actions">
+                <span class="role-badge ${user.role === 'admin' ? 'role-admin' : user.role === 'mod' ? 'role-mod' : 'role-user'}">${user.role}</span>
+                <select class="mini-button" onchange="updateUserRole('${user._id}', this.value)" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background: var(--bg-deep); color: var(--text); border: 1px solid var(--line-soft); border-radius: 4px;">
+                  <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                  <option value="mod" ${user.role === 'mod' ? 'selected' : ''}>Moderator</option>
+                  <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                </select>
+                <button class="mini-button danger-button" onclick="deleteUser('${user._id}')">Delete</button>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          userList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--muted);">No users found</div>';
+        }
+      } catch (err) {
+        console.error('Error loading users:', err);
+        userList.innerHTML = '<div style="text-align: center; padding: 2rem; color: #ff5f5f;">Error loading users</div>';
+      }
+    }
+
+    async function searchUsers() {
+      const searchTerm = document.getElementById('user-search').value.toLowerCase();
+      if (!searchTerm) {
+        loadUsers();
+        return;
+      }
+
+      const filteredUsers = users.filter(user => 
+        user.displayName.toLowerCase().includes(searchTerm) || 
+        user.email.toLowerCase().includes(searchTerm)
+      );
+
+      const userList = document.getElementById('user-list');
+      if (filteredUsers.length > 0) {
+        userList.innerHTML = filteredUsers.map(user => `
+          <div class="user-item">
+            <div class="user-info">
+              <div><strong>${user.displayName}</strong> (${user.email})</div>
+              <div style="font-size: 0.8rem; color: var(--muted);">Joined: ${new Date(user.createdAt).toLocaleDateString()}</div>
+            </div>
+            <div class="user-actions">
+              <span class="role-badge ${user.role === 'admin' ? 'role-admin' : user.role === 'mod' ? 'role-mod' : 'role-user'}">${user.role}</span>
+              <select class="mini-button" onchange="updateUserRole('${user._id}', this.value)" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background: var(--bg-deep); color: var(--text); border: 1px solid var(--line-soft); border-radius: 4px;">
+                <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                <option value="mod" ${user.role === 'mod' ? 'selected' : ''}>Moderator</option>
+                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+              </select>
+              <button class="mini-button danger-button" onclick="deleteUser('${user._id}')">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        userList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--muted);">No users found</div>';
+      }
+    }
+
+    async function updateUserRole(userId, newRole) {
+      if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
+        // Reset the dropdown to original value
+        event.target.value = event.target.dataset.originalRole || 'user';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/role`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: newRole })
+        });
+
+        const data = await res.json();
+        if (data.ok) {
+          alert(`User role updated to ${newRole} successfully!`);
+          loadUsers();
+          loadAdminData(); // Refresh stats
+        } else {
+          alert(`Failed to update user role: ${data.error}`);
+        }
+      } catch (err) {
+        console.error('Error updating user role:', err);
+        alert('An error occurred while updating user role.');
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE'
+        });
+
+        const data = await res.json();
+        if (data.ok) {
+          alert('User deleted successfully!');
+          loadUsers();
+          loadAdminData(); // Refresh stats
+        } else {
+          alert(`Failed to delete user: ${data.error}`);
+        }
+      } catch (err) {
+        console.error('Error deleting user:', err);
+        alert('An error occurred while deleting user.');
+      }
+    }
+
+    // Other admin functions
+    function showRoleManagement() {
+      showUserManagement(); // Reuse user management for role management
+    }
+
+    async function showSystemSettings() {
+      try {
+        const res = await fetch('/api/admin/settings');
+        const data = await res.json();
+        
+        if (data.ok) {
+          const settings = data.settings;
+          const settingsHtml = `
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); border-radius: 8px; padding: 2rem; margin-bottom: 2rem;">
+              <h3 style="color: var(--glow); margin-bottom: 1.5rem;">System Settings</h3>
+              <div style="display: grid; gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Site Name:</span>
+                  <input type="text" id="site-name" value="${settings.siteName}" style="background: rgba(255, 255, 255, 0.1); border: 1px solid var(--line); color: white; padding: 0.5rem; border-radius: 4px;">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Maintenance Mode:</span>
+                  <input type="checkbox" id="maintenance" ${settings.maintenance ? 'checked' : ''}>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Registration Open:</span>
+                  <input type="checkbox" id="registration-open" ${settings.registrationOpen ? 'checked' : ''}>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Discord Bot Status:</span>
+                  <span style="color: ${settings.discordBotStatus === 'Online' ? 'var(--glow)' : '#ff5f5f'}; font-weight: 700;">${settings.discordBotStatus}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Discord Webhook:</span>
+                  <span style="color: ${settings.discordWebhook === 'Configured' ? 'var(--glow)' : '#ff5f5f'};">${settings.discordWebhook}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Email Service:</span>
+                  <span style="color: ${settings.emailService === 'Configured' ? 'var(--glow)' : '#ff5f5f'};">${settings.emailService}</span>
+                </div>
+              </div>
+              <div style="margin-top: 1.5rem;">
+                <button class="admin-button primary-button" onclick="saveSettings()">Save Settings</button>
+              </div>
+            </div>
+          `;
+          
+          // Replace user management section with settings
+          const userManagement = document.getElementById('user-management');
+          userManagement.innerHTML = settingsHtml;
+          userManagement.style.display = 'block';
+        } else {
+          alert('Failed to load settings: ' + data.error);
+        }
+      } catch (err) {
+        console.error('Error loading settings:', err);
+        alert('Error loading system settings');
+      }
+    }
+
+    async function saveSettings() {
+      try {
+        const settings = {
+          siteName: document.getElementById('site-name').value,
+          maintenance: document.getElementById('maintenance').checked,
+          registrationOpen: document.getElementById('registration-open').checked
+        };
+
+        const res = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+
+        const data = await res.json();
+        if (data.ok) {
+          alert('Settings saved successfully!');
+          location.reload(); // Reload to show updated site name
+        } else {
+          alert('Failed to save settings: ' + data.error);
+        }
+      } catch (err) {
+        console.error('Error saving settings:', err);
+        alert('Error saving settings');
+      }
+    }
+
+    async function showLogs() {
+      try {
+        const res = await fetch('/api/admin/logs');
+        const data = await res.json();
+        
+        if (data.ok) {
+          const logs = data.logs;
+          const logsHtml = `
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); border-radius: 8px; padding: 2rem; margin-bottom: 2rem;">
+              <h3 style="color: var(--glow); margin-bottom: 1.5rem;">System Logs</h3>
+              <div style="max-height: 400px; overflow-y: auto; background: rgba(0, 0, 0, 0.3); border-radius: 4px; padding: 1rem;">
+                ${logs.map(log => `
+                  <div style="margin-bottom: 1rem; padding: 0.5rem; border-left: 3px solid ${
+                    log.level === 'error' ? '#ff5f5f' : 
+                    log.level === 'warning' ? '#ffc107' : 
+                    'var(--glow)'
+                  }; background: rgba(255, 255, 255, 0.05);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                      <span style="color: ${
+                        log.level === 'error' ? '#ff5f5f' : 
+                        log.level === 'warning' ? '#ffc107' : 
+                        'var(--glow)'
+                      }; font-weight: 600; text-transform: uppercase;">${log.level}</span>
+                      <span style="color: var(--muted); font-size: 0.8rem;">${new Date(log.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div style="color: white; margin-bottom: 0.5rem;">${log.message}</div>
+                    <div style="color: var(--muted); font-size: 0.8rem;">User: ${log.user}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+          
+          const userManagement = document.getElementById('user-management');
+          userManagement.innerHTML = logsHtml;
+          userManagement.style.display = 'block';
+        } else {
+          alert('Failed to load logs: ' + data.error);
+        }
+      } catch (err) {
+        console.error('Error loading logs:', err);
+        alert('Error loading system logs');
+      }
+    }
+
+    async function showAnalytics() {
+      try {
+        const res = await fetch('/api/admin/analytics');
+        const data = await res.json();
+        
+        if (data.ok) {
+          const analytics = data.analytics;
+          const analyticsHtml = `
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); border-radius: 8px; padding: 2rem; margin-bottom: 2rem;">
+              <h3 style="color: var(--glow); margin-bottom: 1.5rem;">Analytics Dashboard</h3>
+              
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 2rem; font-weight: 700; color: var(--glow);">${analytics.totalUsers}</div>
+                  <div style="color: var(--muted);">Total Users</div>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 2rem; font-weight: 700; color: var(--glow);">${analytics.totalApplications}</div>
+                  <div style="color: var(--muted);">Total Applications</div>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 2rem; font-weight: 700; color: var(--glow);">${analytics.userGrowth.last7Days}</div>
+                  <div style="color: var(--muted);">New Users (7 days)</div>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 2rem; font-weight: 700; color: var(--glow);">${analytics.userGrowth.last30Days}</div>
+                  <div style="color: var(--muted);">New Users (30 days)</div>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div>
+                  <h4 style="color: var(--glow); margin-bottom: 1rem;">Recent Users</h4>
+                  <div style="background: rgba(0, 0, 0, 0.3); border-radius: 4px; padding: 1rem;">
+                    ${analytics.recentUsers.map(user => `
+                      <div style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 4px;">
+                        <div style="color: white; font-weight: 600;">${user.displayName}</div>
+                        <div style="color: var(--muted); font-size: 0.8rem;">${user.email}</div>
+                        <div style="color: var(--muted); font-size: 0.8rem;">${new Date(user.createdAt).toLocaleDateString()}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 style="color: var(--glow); margin-bottom: 1rem;">Recent Applications</h4>
+                  <div style="background: rgba(0, 0, 0, 0.3); border-radius: 4px; padding: 1rem;">
+                    ${analytics.recentApplications.map(app => `
+                      <div style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 4px;">
+                        <div style="color: white; font-weight: 600;">${app.displayName}</div>
+                        <div style="color: ${
+                          app.status === 'approved' ? '#28a745' : 
+                          app.status === 'denied' ? '#dc3545' : 
+                          '#ffc107'
+                        }; font-size: 0.8rem;">Status: ${app.status}</div>
+                        <div style="color: var(--muted); font-size: 0.8rem;">${new Date(app.createdAt).toLocaleDateString()}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          const userManagement = document.getElementById('user-management');
+          userManagement.innerHTML = analyticsHtml;
+          userManagement.style.display = 'block';
+        } else {
+          alert('Failed to load analytics: ' + data.error);
+        }
+      } catch (err) {
+        console.error('Error loading analytics:', err);
+        alert('Error loading analytics');
+      }
+    }
+
+    function exportData() {
+      const data = {
+        users: users,
+        applications: applications,
+        exportedAt: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sincity-admin-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function refreshApplications() {
+      loadAdminData();
+      alert('Data refreshed successfully!');
+    }
+
+    // Initialize admin panel
+    async function initAdminPanel() {
+      const user = await checkAdminAccess();
+      if (user) {
+        // Render admin navigation
+        const nav = document.getElementById('nav-links');
+        if (nav) {
+          const links = [
+            { label: 'Home', href: 'index.html#home' },
+            { label: 'Whitelist', href: 'apply.html#apply' },
+            { label: 'Rules', href: 'rules.html' },
+            { label: 'Team', href: 'team.html' },
+            { label: 'Store', href: 'store.html' },
+            { label: 'Admin Panel', href: 'admin-panel.html' }
+          ];
+          nav.innerHTML = links.map(l => `<a href="${l.href}" class="nav-link">${l.label}</a>`).join('');
+        }
+
+        // Render header actions
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) {
+          headerActions.innerHTML = `<a href="/auth/logout" class="ghost-button" style="display: flex; align-items: center; justify-content: center;">Logout</a>`;
+        }
+
+        // Load admin data
+        await loadAdminData();
+      }
+    }
+
+    // Start the admin panel
+    initAdminPanel();
+  </script>
+</body>
+</html>

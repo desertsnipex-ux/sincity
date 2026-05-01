@@ -90,11 +90,45 @@
       gap: 0.5rem;
       font-size: 0.9rem;
     }
+    .avatar-upload-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .avatar-edit-button {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      background: var(--glow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--bg);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid var(--bg-deep);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      z-index: 10;
+    }
+
+    .avatar-edit-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(142, 255, 105, 0.5);
+    }
+
+    .avatar-edit-button:active {
+      transform: scale(0.95);
+    }
+
     @media (max-width: 900px) {
       .dossier-layout { grid-template-columns: 1fr; }
       .id-card { position: static; }
     }
   </style>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body data-page="profile">
   <div class="page-shell">
@@ -104,19 +138,23 @@
 
     <header class="topbar">
       <div class="topbar-inner">
-        <a class="brand" href="index.html">
-          <div class="brand-mark"><img src="assets/emblem-hero.png" alt="SinCity"></div>
+        <a class="brand" href="index.html#home" aria-label="SinCity home">
+          <div class="brand-mark">
+            <img src="assets/emblem-hero.png" alt="SinCity emblem">
+          </div>
           <div class="brand-copy">
-            <div class="brand-name">SinCity</div>
-            <div class="brand-tag">Central Intelligence</div>
+            <div class="brand-name" id="brand-name">SinCity</div>
+            <div class="brand-tag" id="brand-tag">By Enact</div>
           </div>
         </a>
-        <nav class="nav-links" id="nav-links"></nav>
+
+        <nav class="nav-links" id="nav-links" aria-label="Primary"></nav>
+
         <div class="header-actions"></div>
       </div>
     </header>
 
-    <main class="section">
+    <main class="section" style="display: flex; justify-content: center; align-items: flex-start; padding: 2rem 0;">
       <div class="section-frame">
         <div class="dossier-header">
           <div>
@@ -131,12 +169,13 @@
           <aside>
             <div class="id-card reveal visible">
               <div class="status-badge">ACTIVE CITIZEN</div>
-              <div style="position: relative; display: inline-block;">
-                <img id="profile-avatar" src="assets/emblem-hero.png" alt="Subject Avatar" class="id-avatar" style="cursor: pointer;" onclick="document.getElementById('avatar-upload').click()">
-                <div style="position: absolute; bottom: 25px; right: 10px; background: var(--glow); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: black; border: 2px solid var(--bg-deep); pointer-events: none;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4V1H5V4H8V6H5V9H3V6H0V4H3ZM6 10V7H9V4H13L15 6H20C21.1 6 22 6.9 22 8V18C22 19.1 21.1 20 20 20H6C4.9 20 4 19.1 4 18V10H6ZM13 18C15.21 18 17 16.21 17 14C17 11.79 15.21 10 13 10C10.79 10 9 11.79 9 14C9 16.21 10.79 18 13 18ZM13 12C14.1 12 15 12.9 15 14C15 15.1 14.1 16 13 16C11.9 16 11 15.1 11 14C11 12.9 11.9 12 13 12Z"/></svg>
+              <div class="avatar-upload-container">
+                <img id="profile-avatar" src="assets/emblem-hero.png" alt="Subject Avatar" class="id-avatar">
+                <div class="avatar-edit-button" onclick="uploadAvatar()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                  </svg>
                 </div>
-                <input type="file" id="avatar-upload" class="hidden" accept="image/*" onchange="uploadAvatar(this)">
               </div>
               <h2 id="profile-name" class="tactical-text" style="margin: 0;">Loading...</h2>
               <p id="profile-role-sub" style="color: var(--muted); font-size: 0.8rem; margin-top: 0.5rem;">SINCITY RESIDENT</p>
@@ -146,6 +185,12 @@
                 <div id="clearance-level" style="font-family: var(--display); font-weight: 700; color: var(--glow);">LEVEL 01</div>
               </div>
             </div>
+            <button onclick="generateIDCard()" class="primary-button" style="width: 100%; margin-top: 1rem; font-size: 0.8rem; background: rgba(142, 255, 105, 0.1); border-color: var(--glow); color: var(--glow);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 0.5rem; vertical-align: middle;">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
+              Generate Digital ID
+            </button>
           </aside>
 
           <!-- Data Grid -->
@@ -178,6 +223,13 @@
                 <span id="field-bio" class="field-value" style="font-size: 0.9rem; font-family: var(--body); opacity: 0.8; white-space: pre-wrap;">No bio data established.</span>
               </div>
 
+              <article class="panel reveal visible" style="margin-bottom: 2rem; border-color: var(--glow);">
+                <div class="panel-title">Whitelist Status <small>Application tracker</small></div>
+                <div id="application-status-container" style="margin-top: 1.5rem;">
+                  <div style="text-align: center; padding: 1rem; color: var(--muted);">Checking status...</div>
+                </div>
+              </article>
+
               <button onclick="toggleEdit(true)" class="secondary-button" style="margin-bottom: 2rem;">Modify Dossier Data</button>
             </div>
 
@@ -186,7 +238,7 @@
                 <div class="panel-title">Data Modification <small>Edit profile</small></div>
                 <form id="edit-form" style="margin-top: 1.5rem;">
                   <div class="form-group" style="margin-bottom: 1.2rem;">
-                    <label class="field-label">Citizen Name</label>
+                    <label class="field-label">Username</label>
                     <input type="text" id="edit-name" class="form-input" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--line-soft); border-radius: 8px; padding: 0.8rem; color: white;">
                   </div>
                   <div class="form-group" style="margin-bottom: 1.2rem;">
@@ -234,6 +286,20 @@
                 <div class="news-item">
                   <div class="news-topline"><span>Whitelist ready</span><small>STATUS</small></div>
                   <div class="news-meta">Subject is authorized to submit entry request.</div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel reveal visible" style="margin-top: 2rem; border-color: rgba(255, 95, 95, 0.3);">
+              <div class="panel-title" style="color: #ff5f5f;">Account Termination <small>Permanent action</small></div>
+              <div style="margin-top: 1.5rem;">
+                <p class="section-description" style="margin-bottom: 1rem;">Permanently delete your citizen record and all associated data. This action cannot be undone.</p>
+                <div style="background: rgba(255, 95, 95, 0.1); border: 1px solid #ff5f5f; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <input type="checkbox" id="delete-confirm" style="width: auto;">
+                    <label for="delete-confirm" style="color: #ff5f5f; font-size: 0.9rem;">I understand this action is permanent and cannot be undone</label>
+                  </div>
+                  <button onclick="confirmDeleteAccount()" class="ghost-button" style="background: rgba(255, 95, 95, 0.1); border-color: #ff5f5f; color: #ff5f5f; width: 100%; transition: all 0.3s ease;">Delete My Account</button>
                 </div>
               </div>
             </article>
@@ -290,40 +356,162 @@
       document.getElementById('field-created-at').textContent = new Date(currentUser.createdAt).toLocaleDateString();
       document.getElementById('field-bio').textContent = currentUser.bio || "No bio data established.";
       
-      if (currentUser.role === 'admin') {
-        document.getElementById('clearance-level').textContent = 'LEVEL 05 [ADMIN]';
-        document.getElementById('clearance-level').style.color = '#ff5f5f';
-        document.getElementById('profile-role-sub').textContent = 'CITY ARCHITECT';
-      }
-
+      const statusBadge = document.querySelector('.status-badge');
       if (currentUser.discordId) {
         document.getElementById('discord-linked-ui').classList.remove('hidden');
         document.getElementById('discord-unlinked-ui').classList.add('hidden');
-        document.getElementById('discord-id-val').textContent = currentUser.discordId;
+        document.getElementById('discord-id-val').textContent = currentUser.discordUsername || currentUser.discordId;
+        
+        if (statusBadge) {
+          statusBadge.innerHTML = 'VERIFIED CITIZEN <span style="margin-left: 5px;">☑️</span>';
+          statusBadge.style.background = 'var(--glow)';
+          statusBadge.style.color = '#000';
+        }
+      } else {
+        document.getElementById('discord-linked-ui').classList.add('hidden');
+        document.getElementById('discord-unlinked-ui').classList.remove('hidden');
+        
+        if (statusBadge) {
+          statusBadge.innerHTML = 'UNVERIFIED RECORD ⚠️';
+          statusBadge.style.background = '#ff5f5f';
+          statusBadge.style.color = '#fff';
+        }
+      }
+
+      if (currentUser.role === 'admin' || currentUser.role === 'mod') {
+        const isAdmin = currentUser.role === 'admin';
+        document.getElementById('clearance-level').textContent = isAdmin ? 'LEVEL 05 [ADMIN]' : 'LEVEL 04 [MOD]';
+        document.getElementById('clearance-level').style.color = isAdmin ? '#ff5f5f' : '#ffc107';
+        document.getElementById('profile-role-sub').textContent = isAdmin ? 'CITY ARCHITECT' : 'CITY MODERATOR';
       }
     }
 
-    async function uploadAvatar(input) {
-      if (!input.files || !input.files[0]) return;
-      
-      const formData = new FormData();
-      formData.append('avatar', input.files[0]);
-
+    async function fetchApplicationStatus() {
+      const container = document.getElementById('application-status-container');
       try {
-        const res = await fetch('/api/me/avatar', {
-          method: 'POST',
-          body: formData
-        });
+        const res = await fetch('/api/me/applications');
         const data = await res.json();
-        if (data.ok) {
-          currentUser.avatar = data.avatar;
-          renderData();
-          alert('Avatar uploaded successfully.');
+        
+        if (data.ok && data.applications.length > 0) {
+          // Sort by date to get the most recent one
+          const apps = data.applications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          const latest = apps[0];
+          
+          let statusColor = '#ffc107'; // pending
+          let statusIcon = '⏳';
+          if (latest.status === 'approved') { statusColor = '#28a745'; statusIcon = '✅'; }
+          if (latest.status === 'denied') { statusColor = '#dc3545'; statusIcon = '❌'; }
+
+          // Update the ID card badge if approved
+          if (latest.status === 'approved') {
+            const badge = document.querySelector('.status-badge');
+            if (badge) {
+              badge.textContent = 'WHITELISTED';
+              badge.style.background = '#28a745';
+              badge.style.color = '#fff';
+            }
+          }
+
+          container.innerHTML = `
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--line-soft); border-radius: 8px; padding: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span class="field-label" style="margin: 0;">LATEST SUBMISSION</span>
+                <span style="color: ${statusColor}; font-weight: 700; font-family: var(--display); letter-spacing: 1px; font-size: 0.9rem;">
+                  ${statusIcon} ${latest.status.toUpperCase()}
+                </span>
+              </div>
+              <div style="color: white; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                <strong>Playstyle:</strong> ${latest.playstyle}
+              </div>
+              <div style="color: var(--muted); font-size: 0.8rem;">
+                Submitted: ${new Date(latest.createdAt).toLocaleDateString()}
+                ${latest.reviewedAt ? `<br>Reviewed: ${new Date(latest.reviewedAt).toLocaleDateString()}` : ''}
+              </div>
+            </div>
+          `;
         } else {
-          alert(data.error || 'Upload failed.');
+          container.innerHTML = `
+            <div style="text-align: center; padding: 1rem; border: 1px dashed var(--line-soft); border-radius: 8px;">
+              <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem;">No whitelist record found for this subject.</p>
+              <a href="apply.html#apply" class="secondary-button" style="font-size: 0.8rem; padding: 0.5rem 1rem;">Start Application</a>
+            </div>
+          `;
         }
       } catch (err) {
-        alert('Connection error during upload.');
+        container.innerHTML = '<div style="color: #ff5f5f; font-size: 0.9rem;">Failed to synchronize status with mainframe.</div>';
+      }
+    }
+
+    async function uploadAvatar() {
+      // Create file input dynamically
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.onchange = async (e) => {
+        if (!e.target.files || !e.target.files[0]) return;
+        
+        const formData = new FormData();
+        formData.append('avatar', e.target.files[0]);
+
+        try {
+          const res = await fetch('/api/me/avatar', {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data.ok) {
+            currentUser.avatar = data.avatar;
+            renderData();
+            alert('Avatar uploaded successfully.');
+          } else {
+            alert(data.error || 'Upload failed.');
+          }
+        } catch (err) {
+          alert('Connection error during upload.');
+        }
+      };
+      fileInput.click();
+    }
+
+    async function generateIDCard() {
+      const card = document.querySelector('.id-card');
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      
+      try {
+        btn.innerHTML = 'GENERATING...';
+        btn.disabled = true;
+
+        const canvas = await html2canvas(card, {
+          backgroundColor: '#030805',
+          scale: 2, // Higher resolution
+          useCORS: true, // For external avatars
+          logging: false,
+          onclone: (clonedDoc) => {
+            // Remove the edit button from the clone so it doesn't appear in the image
+            const editBtn = clonedDoc.querySelector('.avatar-edit-button');
+            if (editBtn) editBtn.remove();
+            
+            // Ensure the card in the clone is visible
+            const clonedCard = clonedDoc.querySelector('.id-card');
+            clonedCard.style.position = 'relative';
+            clonedCard.style.top = '0';
+          }
+        });
+
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        link.download = `sincity-id-${currentUser.displayName.toLowerCase()}.png`;
+        link.href = image;
+        link.click();
+        
+        alert('Digital ID generated and downloaded.');
+      } catch (err) {
+        console.error('ID generation failed', err);
+        alert('ID generation failed. Ensure your browser supports canvas capture.');
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
       }
     }
 
@@ -336,19 +524,21 @@
       
       const links = [
         { label: 'Home', href: 'index.html#home' },
-        { label: 'Pulse', href: 'index.html#pulse' },
-        { label: 'Districts', href: 'apply.html#districts' },
-        { label: 'Apply', href: 'apply.html#apply' },
+        { label: 'Whitelist', href: 'apply.html#apply' },
         { label: 'Rules', href: 'rules.html' },
         { label: 'Team', href: 'team.html' },
         { label: 'Store', href: 'store.html' }
       ];
 
+      // Add Admin Panel link for admins and mods
+      if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'mod')) {
+        links.push({ label: 'Admin Panel', href: 'admin-panel.html' });
+      }
+
       nav.innerHTML = links.map(l => `<a href="${l.href}" class="nav-link">${l.label}</a>`).join('');
     }
 
     async function loadDossier() {
-      renderNav();
       try {
         const res = await fetch('/api/me');
         const data = await res.json();
@@ -359,12 +549,14 @@
         }
 
         currentUser = data.user;
+        renderNav();
         renderData();
+        fetchApplicationStatus();
 
         // Render header actions (Logout button)
         const headerActions = document.querySelector('.header-actions');
         if (headerActions) {
-          headerActions.innerHTML = `<a href="/auth/logout" class="ghost-button">Terminate Session</a>`;
+          headerActions.innerHTML = `<a href="/auth/logout" class="ghost-button" style="display: flex; align-items: center; justify-content: center;">Logout</a>`;
         }
 
       } catch (err) {
