@@ -129,7 +129,7 @@ app.use(session({
   saveUninitialized: false,
   name: 'sincity.sid',
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Set to false so it works over HTTP on VPS
     httpOnly: true,
     sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 
