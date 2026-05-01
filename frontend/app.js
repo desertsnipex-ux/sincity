@@ -22,6 +22,7 @@ const state = {
   theme: "neon",
   content: null,
   runtime: null,
+  user: null,
   applications: [],
   activeBulletin: null,
   activeIncident: 0,
@@ -1226,9 +1227,12 @@ async function checkAuth() {
     const data = await fetchJson("/api/me");
     if (data.authenticated) {
       state.user = data.user;
+    } else {
+      state.user = null;
     }
   } catch (err) {
     console.log("Not authenticated");
+    state.user = null;
   }
   renderAuthStatus(); // Always call this to show either Profile or Join button
 }

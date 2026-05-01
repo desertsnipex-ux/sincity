@@ -436,8 +436,9 @@ app.get("/auth/logout", (req, res) => {
   req.logout((err) => {
     if (err) return res.status(500).json({ error: "Logout failed" });
     req.session.destroy((err) => {
-      if (err) return res.status(500).json({ error: "Session destruction failed" });
-      res.clearCookie('sincity.sid');
+      if (err) console.error("Session destruction failed:", err);
+      res.clearCookie('sincity.sid', { path: '/', httpOnly: true, secure: false });
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
       res.redirect("/");
     });
   });
@@ -454,7 +455,10 @@ app.get("/reset-password", (req, res) => res.sendFile(path.join(ROOT, "reset-pas
 app.get("/apply.html", (req, res) => res.sendFile(path.join(ROOT, "apply.html")));
 
 // --- API ROUTES ---
-app.get("/api/me", (req, res) => res.json({ authenticated: req.isAuthenticated(), user: req.user || null }));
+app.get("/api/me", (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.json({ authenticated: req.isAuthenticated(), user: req.user || null });
+});
 
 // Staff authorization helper
 function isStaff(req) {
